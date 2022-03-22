@@ -5,21 +5,31 @@ class Display{
     static Draw(){
         if (!this.context || !this.myGameState) return // Prevents fail
 
-        Display.ClearScreen(this.context);
-        
-        this.myGameState.projectiles.forEach(proj => {
-            Display.DrawPawn(proj, this.context);
-        });
+        Display.ClearScreen();
         
         let players = this.myGameState.GetPlayers();
+
         for (let id in players) {
-            Display.DrawPawn(players[id], this.context);
+            Display.DrawPawn(players[id].player);
         }
 
         // let player = myGame.myGameState.players[0];
         // Display.DrawHealthBar(player, this.context);
 
         requestAnimationFrame(() => Display.Draw());
+    }
+
+    static SetContext(context){
+        this.context = context;
+    }
+
+    static SetGameState(myGameState){
+        this.myGameState = myGameState;
+    }
+
+    // roomPlayers = rooms[room_id]['players'] array
+    static SetPlayers(roomPlayers, socked_id){
+        this.myGameState.SetPlayers(roomPlayers, socked_id);
     }
 
     static DrawPawn(pawn){
@@ -33,6 +43,7 @@ class Display{
         const tam = this.context.canvas.getBoundingClientRect();
         this.context.clearRect(0, 0, tam.width, tam.height);
     }
+
 
     static DrawHealthBar(player){
         // Border
@@ -59,24 +70,33 @@ class Display{
 class GameState{
     constructor(){
         this.players = {};
-        this.projectiles = new Array();
+    }
+    
+    SetPlayers(roomPlayers, socked_id){
+        console.log('roomPlayers');
+        console.log(roomPlayers);
+        
+        this.players = {};
+        roomPlayers.forEach(player => {
+            this.players[player.player_id] = {
+                player: player.player,
+                is_me: (socked_id == player.player_id)
+            }
+        });
+
+        console.log('this.players');
+        console.log(this.players);
     }
 
     GetPlayers(){
         return this.players;
     }
 
-    GetProjectiles(){
-        return this.projectiles;
+    SetPlayersPos(posPlayers){
+        for (let id in posPlayers){
+            this.players[id].player.SetPos(posPlayers[id]);
+        }
     }
-
-    SetPlayers(players){
-        this.players = players;
-    }
-
-    SetProjectiles(projectiles){
-        this.projectiles = projectiles;
-    }  
 }
 
 export { GameState, Display };

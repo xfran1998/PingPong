@@ -17,12 +17,12 @@ const io = socketio(server);
 //     }
 // }
 
-const users = {};
+const players = {};
 const rooms = {};
 
 // 960, 468.5
 // 1920 937
-const TAM_GAME = {width: 1920, height: 935};
+const TAM_GAME = {width: 600, height: 350};
 const FPS = 60;
 const padding = 10;
 
@@ -34,17 +34,36 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 const colors = ['blue','red'];
 
-let cont=0;
 console.log("Empezando!!");
 // Funcion que se ejecuta cuando un usuario se conecta al websocket
 io.on('connection', (socket) => {
     console.log("Nueva conexion!!");
     socket.on("disconnecting", () => {
-
         console.log("**** DISCONNECTING ****");
-        console.log(socket.id);
-        console.log(users);
-        console.log(rooms);
+        console.log('leaving: ', socket.id);
+
+        // check if user exists
+        if (!players[socket.id]) return 
+
+        let room_name = players[socket.id].room;
+        // delete player from players object
+        delete players[socket.id];
+
+        // check if room exists
+        if (!rooms[room_name]) return
+
+        // delete player from room
+        rooms[room_name].players = rooms[room_name].players.filter(player => player['player_id'] != socket.id);
+
+        // check if room is empty
+        if (rooms[room_name].players.length == 0) {
+            delete rooms[room_name];
+        }
+
+
+
+        console.log(players);
+        console.log(JSON.stringify(rooms));
         console.log("**********************");
     });   
         
@@ -80,7 +99,7 @@ io.on('connection', (socket) => {
         let coords;
         let side;
 
-        if (rooms[room_id].length == 0)
+        if (rooms[room_id]['players'].length == 0)
             side = Math.floor(Math.random() * 2); // choose a side randomly between 0 and 1 (left or right)
         else
             side = 1 - rooms[room_id]['players'][0].side; // opposite side, if player1 have 1 then player2 have 0 and viceversa
@@ -91,22 +110,36 @@ io.on('connection', (socket) => {
         else // right
             coords = [TAM_GAME.width - padding, TAM_GAME.height/2];
 
+        const newPlayer = myGame.SpawnPlayer(socket.id, 50, coords, colors[side], 10, `Player${side}`, 200); // debug only
+
         // set player inside the room
         rooms[room_id]['players'].push({
             'player_id': socket.id,
-            'side': side
+            'side': side,
+            'player': newPlayer
         });            
+
+        players[socket.id] = {
+            room: room_id,
+        };
         
-        myGame.SpawnPlayer(socket.id, 50, coords, colors[side], 10, `Player${cont++}`, 200); // debug only
 
         socket.join(room_id);
 
         // socket.broadcast.to(room_id).emit('server', 'New Player Joined: ' + socket.id);
 
-        console.log(rooms);
+        console.log(JSON.stringify(rooms));
         
-        let return_msg = {status: 'ok', response: {room: rooms[room_id]}};
-        socket.emit('join_room_server', return_msg);
+        // room: rooms[room_id] to get players and each side players
+        let response = {status: 200, response: {
+            room: rooms[room_id],
+            TAM_GAME: TAM_GAME
+        }};
+
+        io.to(room_id).emit('join_room_server', response);
+        io.to(room_id).emit('set_player_server', {
+            
+        });
 
         
         // if (rooms[room_id] && rooms[room_id].length == 2){
@@ -128,12 +161,12 @@ io.on('connection', (socket) => {
     });
 
     socket.on('client_update_key', (input) => {
-        input.idPlayer = socket.id;
-        myGame.UpdatePlayerKeys(input);
+        // input.idPlayer = socket.id;
+        // myGame.UpdatePlayerKeys(input);
         console.log("**** MOVING ****");
-        // console.log(myGame.GetPlayersKeys());
-        console.log(myGame.GetPlayersDir());
-        console.log("**********************");
+        // // console.log(myGame.GetPlayersKeys());
+        // console.log(myGame.GetPlayersDir());
+        // console.log("**********************");
     })
 
 

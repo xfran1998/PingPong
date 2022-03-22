@@ -43,6 +43,10 @@ class Pawn{
         else this.pos[1] = newPos[1];
         // console.log(tarjetPos);
     }  
+
+    SetPos(pos){
+        this.pos = pos;
+    }
 }
 
 class Player extends Pawn{
@@ -125,6 +129,10 @@ class Player extends Pawn{
     GetName(){
         return this.name;
     }
+
+    SetPos(pos){
+        super.SetPos(pos);
+    }
 }
 
 class GameState{
@@ -142,6 +150,15 @@ class GameState{
 
     SetPlayers(players){
         this.players = players;
+    }
+
+    GetPlayersPos(){
+        let players = this.myGameState.GetAllPlayers();
+        let posPlayers = [];
+        for (let id in players) {
+            posPlayers[id] = players[id].GetPos();
+        }
+        return posPlayers;
     }
 }
 
@@ -251,6 +268,7 @@ class Game{
 
         const newPlayer = new Player(size, pos, color, speed, name, health);
         this.myGameState.AddPlayer(idPlayer, newPlayer);
+        return newPlayer;
     }
     
     /*

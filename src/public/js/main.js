@@ -11,36 +11,43 @@ var input = {
     key: 'z'
 };
 
-$ = selector => document.querySelector(selector);
-$$ = selector => document.querySelectorAll(selector);
+const $ = selector => document.querySelector(selector);
+const $$ = selector => document.querySelectorAll(selector);
 
-socket.on('server', (message) => {
-    let el = document.createElement('div');
-    el.classList = "key-container";
-    el.innerHTML = `<p>${message}</p>`;
+socket.on('join_room_server', (data) => {
+    if (data.status != 200) {
+        alert(data.response);
+        return;
+    }
 
-    container.appendChild(el);
-    console.log('Hijo añadido: ', message);
+    console.log(data.response);
+    console.log(socket.id);
+    DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
 });
+
+
 
 socket.on('server_start_game', (TAM_GAME) => {
     console.log('****  GAME START  ****');
 
+});
+
+socket.on('update_players_server', (info) => {
+    Display.myGameState.SetPlayersPos(info.players);
+});
+
+function DisplayCanvas(room, TAM_GAME, socked_id){
     canvas.width = TAM_GAME.width;
     canvas.height = TAM_GAME.height;
 
-    Display.context = context;
-    Display.myGameState = new GameState();;
+    Display.SetContext(context);
+    Display.SetGameState(new GameState());
+    Display.SetPlayers(room['players'], socked_id)
     Display.Draw();
     
     canvas.classList.remove('hidden');
     container.classList.add('hidden');
-});
-
-socket.on('server_update_players', (info) => {
-    Display.myGameState.SetPlayers(info.players);
-    Display.myGameState.SetProjectiles(info.projectiles);
-});
+}
 
 function UpdateKey(type, key){
     if (input.type == type && input.key == key) // if haven't changed
@@ -57,10 +64,10 @@ function UpdateKey(type, key){
 
 document.addEventListener('keydown', (e) => {
     let key = e.key.toLowerCase()
-    if (key == 'a' || key == 'w' || key =='s' || key =='d')
+    if (key == 'w' || key =='s')
         UpdateKey(true, key);
-    else if(e.key == 'q' || e.key == 'Q')
-        socket.emit('client_use_hability', 'q');
+    // else if(e.key == 'q' || e.key == 'Q')
+    //     socket.emit('client_use_hability', 'q');
 });
 
 document.addEventListener('keyup', (e) => {
