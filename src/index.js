@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const socketio = require('socket.io');
 // const { randomInt } = require('crypto');
-const Game = require('./Game');
+const Game = require('./game.js');
 
 const app = express();
 const server = http.createServer(app);
