@@ -26,8 +26,6 @@ const TAM_GAME = {width: 600, height: 350};
 const FPS = 60;
 const padding = 10;
 
-let myGame = new Game(TAM_GAME, FPS);
-
 // Seteando carpeta estatica, carpeta donde contiene todos los datos que requiere el usuario cuando hace la peticion
 // a la web buscando recursos.
 app.use(express.static(path.join(__dirname, 'public')))
@@ -53,14 +51,12 @@ io.on('connection', (socket) => {
         if (!rooms[room_name]) return
 
         // delete player from room
-        rooms[room_name].players = rooms[room_name].players.filter(player => player['player_id'] != socket.id);
+        rooms[room_name].players = rooms[room_name].players.filter(player => player['player'].id != socket.id);
 
         // check if room is empty
         if (rooms[room_name].players.length == 0) {
             delete rooms[room_name];
         }
-
-
 
         console.log(players);
         console.log(JSON.stringify(rooms));
@@ -99,24 +95,29 @@ io.on('connection', (socket) => {
         let coords;
         let side;
 
-        if (rooms[room_id]['players'].length == 0)
+        let myGame ;
+        if (rooms[room_id]['players'].length == 0){ // first player, new room
             side = Math.floor(Math.random() * 2); // choose a side randomly between 0 and 1 (left or right)
-        else
+            myGame = new Game(TAM_GAME, FPS);
+            rooms[room_id]['game'] = myGame;
+        }
+        else{
             side = 1 - rooms[room_id]['players'][0].side; // opposite side, if player1 have 1 then player2 have 0 and viceversa
+            myGame = rooms[room_id].game;
+        }
         
         // set up side coords
         if (side == 0) // left
-            coords = [padding, TAM_GAME.height/2];
+            coords = {x:padding, y: TAM_GAME.height/2};
         else // right
-            coords = [TAM_GAME.width - padding, TAM_GAME.height/2];
+            coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
 
-        const newPlayer = myGame.SpawnPlayer(socket.id, 50, coords, colors[side], 10, `Player${side}`, 200); // debug only
+        const newPlayer = myGame.SpawnPlayer({width: 6, height: 16}, coords, colors[side], 10, socket.id ,`Player${side}`, 0); // debug only
 
         // set player inside the room
         rooms[room_id]['players'].push({
-            'player_id': socket.id,
-            'side': side,
-            'player': newPlayer
+            side: side,
+            player: newPlayer
         });            
 
         players[socket.id] = {
@@ -137,10 +138,22 @@ io.on('connection', (socket) => {
         }};
 
         io.to(room_id).emit('join_room_server', response);
-        io.to(room_id).emit('set_player_server', {
-            
-        });
 
+        // start the game if room is full
+        if (rooms[room_id]['players'].length == 2){
+            io.to(room_id).emit('start_game_server');
+
+            //start game
+            myGame.Run(
+                (game) => {
+                    game.PlayerMove(
+                        (playerPos, id) => {
+                            io.to(room_id).emit('update_players_server', );
+                        }
+                    ); // Move the player (key pressed)
+                },
+            );
+        }
         
         // if (rooms[room_id] && rooms[room_id].length == 2){
         //     const emit_server = (room) => {

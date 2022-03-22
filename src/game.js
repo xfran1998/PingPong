@@ -24,24 +24,35 @@ class Pawn{
         this.speed = speed;
     }
 
-    Update(tarjetPos){
-        this.pos = [this.pos[0]+tarjetPos[0]*this.speed, this.pos[1]+tarjetPos[1]*this.speed];
+    Update(vel_dir){
+        this.pos = [this.pos[0]+vel_dir[0]*this.speed, this.pos[1]+vel_dir[1]*this.speed];
         // console.log(tarjetPos);
     }  
 
-    UpdateValid(tarjetPos, center){
-        let newPos = [this.pos[0]+tarjetPos[0]*this.speed, this.pos[1]+tarjetPos[1]*this.speed];
-        
-        // Check inside cambas x axis
-        if (center[0]*2-this.size < newPos[0]) this.pos[0] = center[0]*2-this.size;
-        else if(newPos[0] < this.size) this.pos[0] = this.size;
-        else this.pos[0] = newPos[0];
+    UpdateValid(vel_dir, canvas_size){
+        let newPos = [this.pos[0]+vel_dir[0]*this.speed, this.pos[1]+vel_dir[1]*this.speed];
 
+        let hit_borders = {x_axis:false, y_axis:false}; 
+        // Check inside cambas x axis
+        if (newPos[0] < this.size.x/2 ){
+            newPos[0] = this.size.x/2;
+            hit_borders.x_axis = true;
+        }
+        if (newPos[0] > canvas_size.width - this.size.x/2){
+            newPos[0] = canvas_size.width - this.size.x/2;
+            hit_borders.x_axis = true;
+        }
         // Check inside cambas y axis
-        if (center[1]*2-this.size < newPos[1]) this.pos[1] = center[1]*2-this.size;
-        else if(newPos[1] < this.size) this.pos[1] = this.size;
-        else this.pos[1] = newPos[1];
-        // console.log(tarjetPos);
+        if (newPos[1] < this.size.y/2){
+            newPos[1] = this.size.y/2;
+            hit_borders.y_axis = true;
+        }
+        if (newPos[1] > canvas_size.height - this.size.y/2){
+            newPos[1] = canvas_size.height - this.size.y/2;
+            hit_borders.y_axis = true;
+        }
+
+        return hit_borders;
     }  
 
     SetPos(pos){
@@ -50,18 +61,22 @@ class Pawn{
 }
 
 class Player extends Pawn{
-    constructor(size, pos, color, speed, name, health){
+    constructor(size, pos, color, speed, id, name, score){
         super(size, pos, color, speed);
+        this.id = id;
         this.name = name;
+        this.score = score;
         this.keysPress = [];
         this.direction = {x: 0, y: 0};
     }
 
     // Move toward espefic target, this a
-    Move(center){
-        let dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
+    Move(canvas_size){
+        // if 
+
+        let vel_dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
     
-        super.UpdateValid(dir, center);
+        return super.UpdateValid(vel_dir, canvas_size);
         // console.log((center[0]*2-this.size) > this.pos[0] && this.pos[0] > (0+this.size));
     }
 
@@ -87,12 +102,12 @@ class Player extends Pawn{
             //     dirPressed.x = true;
             // } 
             
-            if ((key == 'w' || key == 'W')) {
+            if ((key == 'w')) {
                 this.direction.y = -1;
                 dirPressed.y = true;
                 
             }
-            else if ((key == 's' || key == 'S')) {
+            else if ((key == 's')) {
                 this.direction.y = 1;
                 dirPressed.y = true;
             }
@@ -104,14 +119,19 @@ class Player extends Pawn{
     }
 
     KeyPressed(key){
-        if (this.keysPress.indexOf(key) == -1)
-            this.keysPress.push(key);
+        key = key.toLowerCase();
 
+        if (this.keysPress.indexOf(key) != -1) return; // Key already pressed, avoid duplicates
+        
+        this.keysPress.push(key); // Add key to keysPress array
         this.UpdateDir();
     }
     
     KeyReleassed(key){
         let ind = this.keysPress.indexOf(key);
+
+        if (ind == -1) return;
+
         this.keysPress.splice(ind,1);
 
         console.log(`Released: ${key}`);
@@ -216,36 +236,30 @@ class GameState{
 class Game{
     constructor(tam, fps){
         this.myGameState = new GameState();
-        this.center = [tam.width/2, tam.height/2];
+        this.size_canvas = tam;
         this.gameFrec = 1000/fps;
         this.gameStarted = false;
         // const GAME_CHECK_INTERV = 100;
     }
 
-    Run(args, ...runtimeFuncs){
+    Run(...runtimeFuncs){
         this.gameStarted = true;
 
-        // Display.Draw(this.myGameState, this.context);
+        // replicate functions ( ...func(game) )
         setInterval(() => {
-            this.PlayerMove(); // Move the player (key pressed)
-            this.ProjectilesMove(); // Move projectiles
-            this.ProjectileHitEnemy(); // check if hit projectile
-            this.DespawnProjectile(); // check if can despawn proj
-
-            let i=0;
-            // If we want to debug something
+            // game loop
             runtimeFuncs.forEach( func => {
-                func(args[i]);
-                i++;
+                func(this);
             });
-
         }, this.gameFrec); // Maybe split and change to GAME_CHECK_INTERV if overloaded server
     }
 
-    PlayerMove(){
+    
+    PlayerMove(replicated=null){
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
-            players[id].Move(this.center);
+            if (players[id].Move(this.size_canvas) && replicated != null)
+                replicated(players[id].GetPos(), id);
         }
     }
 

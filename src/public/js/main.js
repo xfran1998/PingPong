@@ -6,10 +6,13 @@ const btn = document.querySelectorAll('.btn');
 const canvas = document.querySelector('#game');
 const context = canvas.getContext('2d');
 
-var input = {
+let input = {
     type: false,
     key: 'z'
 };
+
+let inside_game = false;
+
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
@@ -22,18 +25,18 @@ socket.on('join_room_server', (data) => {
 
     console.log(data.response);
     console.log(socket.id);
+    inside_game = true;
     DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
 });
 
 
-
-socket.on('server_start_game', (TAM_GAME) => {
-    console.log('****  GAME START  ****');
+socket.on('start_game_server', () => {
+    alert('****  GAME START  ****');
 
 });
 
 socket.on('update_players_server', (info) => {
-    Display.myGameState.SetPlayersPos(info.players);
+    Display.myGameState.SetPlayerPos(info.players, info.player_id);
 });
 
 function DisplayCanvas(room, TAM_GAME, socked_id){

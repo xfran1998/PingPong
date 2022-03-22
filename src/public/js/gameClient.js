@@ -10,7 +10,7 @@ class Display{
         let players = this.myGameState.GetPlayers();
 
         for (let id in players) {
-            Display.DrawPawn(players[id].player);
+            Display.DrawPlayer(players[id].player);
         }
 
         // let player = myGame.myGameState.players[0];
@@ -32,10 +32,14 @@ class Display{
         this.myGameState.SetPlayers(roomPlayers, socked_id);
     }
 
-    static DrawPawn(pawn){
+    static SetPlayer(player){
+
+    }
+
+    static DrawPlayer(player){
         this.context.beginPath();
-        this.context.arc(pawn.pos[0], pawn.pos[1], pawn.size, 0, Math.PI*2, false);  
-        this.context.fillStyle = pawn.color;           
+        this.context.rect(player.pos1)
+        this.context.fillStyle = player.color;           
         this.context.fill(); 
     }
 
@@ -80,7 +84,8 @@ class GameState{
         roomPlayers.forEach(player => {
             this.players[player.player_id] = {
                 player: player.player,
-                is_me: (socked_id == player.player_id)
+                side: player.side,
+                is_me: (socked_id == player.id)
             }
         });
 
