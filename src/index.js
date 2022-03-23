@@ -44,6 +44,7 @@ io.on('connection', (socket) => {
         if (!players[socket.id]) return 
 
         let room_name = players[socket.id].room;
+        
         // delete player from players object
         delete players[socket.id];
 
@@ -51,7 +52,10 @@ io.on('connection', (socket) => {
         if (!rooms[room_name]) return
 
         // delete player from room
-        rooms[room_name].players = rooms[room_name].players.filter(player => player['player'].id != socket.id);
+        rooms[room_name].players = rooms[room_name].players.filter(playerSettings => playerSettings.player.id !== socket.id);
+
+        // delete user from game
+        rooms[room_name].game.DeletePlayer(socket.id);
 
         // check if room is empty
         if (rooms[room_name].players.length == 0) {
@@ -134,6 +138,7 @@ io.on('connection', (socket) => {
                 (game) => {
                     game.PlayerMove(
                         (playerPos, id) => {
+                            console.log(`Player ${id} moved to ${playerPos}`);
                             io.to(room_id).emit('update_player_pos_server', {
                                 playerPos: playerPos,
                                 playerId: id
@@ -162,10 +167,12 @@ io.on('connection', (socket) => {
         // }
     });
 
-    socket.on('client_update_key', (input) => {
-        // input.idPlayer = socket.id;
-        // myGame.UpdatePlayerKeys(input);
-        console.log("**** MOVING ****");
+    socket.on('update_key_client', (input) => {
+        if (!players[socket.id]) return;
+
+        input.idPlayer = socket.id;
+        rooms[players[socket.id].room].game.UpdatePlayerKeys(input);
+        // console.log("**** MOVING ****");
         // // console.log(myGame.GetPlayersKeys());
         // console.log(myGame.GetPlayersDir());
         // console.log("**********************");

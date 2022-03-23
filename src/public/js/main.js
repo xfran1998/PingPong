@@ -36,7 +36,7 @@ socket.on('start_game_server', () => {
 });
 
 socket.on('update_player_pos_server', (info) => {
-    Display.myGameState.SetPlayerPos(info.players, info.player_id);
+    Display.myGameState.SetPlayerPos(info.playerId, info.playerPos);
 });
 
 function DisplayCanvas(room, TAM_GAME, socked_id){
@@ -62,19 +62,21 @@ function UpdateKey(type, key){
     // if (input.type != type) console.log(`type: ${input.type} - ${type}`);
     // if (input.key != type) console.log(`key: ${input.key} - ${key}`);
     
-    socket.emit('client_update_key', input);   
+    socket.emit('update_key_client', input);   
 }
 
 document.addEventListener('keydown', (e) => {
-    let key = e.key.toLowerCase()
+    let key = e.key/*.toLowerCase()*/;
     if (key == 'w' || key =='s')
-        UpdateKey(true, key);
+    UpdateKey(true, key);
     // else if(e.key == 'q' || e.key == 'Q')
     //     socket.emit('client_use_hability', 'q');
 });
 
 document.addEventListener('keyup', (e) => {
-    UpdateKey(false, e.key);
+    let key = e.key/*.toLowerCase()*/;
+    if (key == 'w' || key =='s')
+        UpdateKey(false, e.key);
 });
 
 

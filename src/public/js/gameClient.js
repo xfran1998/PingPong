@@ -10,6 +10,7 @@ class Display{
         let players = this.myGameState.GetPlayers();
 
         for (let id in players) {
+            console.log('id: ', players[id]);
             Display.DrawPlayer(players[id].player);
         }
 
@@ -37,10 +38,16 @@ class Display{
     }
 
     static DrawPlayer(player){
+        console.log('x1: ', player.pos.x - player.size.width/2);
+        console.log('y1: ', player.pos.y - player.size.height/2);
+        console.log('x2: ', player.pos.x + player.size.width/2);
+        console.log('y2: ', player.pos.y + player.size.height/2);
+
         this.context.beginPath();
-        this.context.rect(player.pos1)
+        this.context.rect(player.pos.x - player.size.width/2, player.pos.y - player.size.height/2, player.size.width, player.size.height);
         this.context.fillStyle = player.color;           
         this.context.fill(); 
+        this.context.closePath();
     }
 
     static ClearScreen(){
@@ -56,18 +63,18 @@ class Display{
         let tamHealth = [player.health, 30];
         let stroke = 3;
 
-        // Player green health
-        this.context.beginPath();
-        this.context.rect(pos[0], pos[1], tamHealth[0], tamHealth[1]);
-        this.context.fillStyle = "green";           
-        this.context.fill(); 
+        // // Player green health
+        // this.context.beginPath();
+        // this.context.rect(pos.x, pos.y, tamHealth[0], tamHealth[1]);
+        // this.context.fillStyle = "green";           
+        // this.context.fill(); 
         
-        // Border of the player health
-        this.context.beginPath();
-        this.context.rect(pos[0], pos[1], tamBorder[0], tamBorder[1]);
-        this.context.lineWidth = stroke;
-        this.context.strokeStyle = 'black';
-        this.context.stroke();        
+        // // Border of the player health
+        // this.context.beginPath();
+        // this.context.rect(pos.x, pos.y, tamBorder[0], tamBorder[1]);
+        // this.context.lineWidth = stroke;
+        // this.context.strokeStyle = 'black';
+        // this.context.stroke();        
     }
 }
 
@@ -81,11 +88,13 @@ class GameState{
         console.log(roomPlayers);
         
         this.players = {};
-        roomPlayers.forEach(player => {
-            this.players[player.player_id] = {
-                player: player.player,
-                side: player.side,
-                is_me: (socked_id == player.id)
+        roomPlayers.forEach(playerSettings => {
+            console.log('playerSettings');
+            console.log(playerSettings);
+            this.players[playerSettings.player.id] = {
+                player: playerSettings.player,
+                side: playerSettings.side,
+                is_me: (socked_id == playerSettings.player.id)
             }
         });
 
@@ -104,7 +113,7 @@ class GameState{
     }
 
     SetPlayerPos(id, pos){
-        this.players[id].player.SetPos(pos);
+        this.players[id].player.pos = pos;
     }
 }
 

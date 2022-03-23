@@ -78,7 +78,7 @@ class Player extends Pawn{
 
         let vel_dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
         super.UpdateValid(vel_dir, canvas_size);
-        
+
         return true;
     }
 
@@ -116,13 +116,11 @@ class Player extends Pawn{
         });
 
         // Check if direction not pressed and set direction to 0
-        if (!dirPressed.x) this.direction.x = 0;
+        // if (!dirPressed.x) this.direction.x = 0;
         if (!dirPressed.y) this.direction.y = 0;
     }
 
     KeyPressed(key){
-        key = key.toLowerCase();
-
         if (this.keysPress.indexOf(key) != -1) return; // Key already pressed, avoid duplicates
         
         this.keysPress.push(key); // Add key to keysPress array
@@ -181,6 +179,10 @@ class GameState{
             posPlayers[id] = players[id].GetPos();
         }
         return posPlayers;
+    }
+
+    DeletePlayer(idPlayer){
+        delete this.players[idPlayer];
     }
 }
 
@@ -257,9 +259,13 @@ class Game{
     }
     
     PlayerMove(replicated=null){
-        console.log(replicated);
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
+            // if (players[id].Move(this.size_canvas))
+            //     console.log('Move');
+            // if (replicated != null)
+            //     console.log('Replciated'); 
+
             if (players[id].Move(this.size_canvas) && replicated != null)
                 replicated(players[id].GetPos(), id);
         }
@@ -274,10 +280,14 @@ class Game{
     }
 
     SpawnPlayer(size, pos, color, speed, idPlayer, name, score){
-        const newPlayer = new Player(size, pos, color, speed, name, score);
+        const newPlayer = new Player(size, pos, color, speed, idPlayer, name, score);
         this.myGameState.AddPlayer(idPlayer, newPlayer);
 
         return newPlayer;
+    }
+
+    DeletePlayer(idPlayer){
+        this.myGameState.DeletePlayer(idPlayer);
     }
     
     /*
