@@ -35,7 +35,6 @@ class Display{
     }
 
     static DrawPlayer(player){
-
         this.context.beginPath();
         this.context.rect(player.pos.x - player.size.width/2, player.pos.y - player.size.height/2, player.size.width, player.size.height);
         this.context.fillStyle = player.color;           

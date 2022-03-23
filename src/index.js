@@ -3,7 +3,7 @@ const express = require('express');
 const http = require('http');
 const socketio = require('socket.io');
 // const { randomInt } = require('crypto');
-const Game = require('./game.js');
+const {Game, GameMode} = require('./game.js');
 
 const app = express();
 const server = http.createServer(app);
@@ -59,15 +59,12 @@ io.on('connection', (socket) => {
         rooms[room_name].game.DeletePlayer(socket.id);
 
         // check if room is empty
-        if (rooms[room_name].players.length == 0) {
+        if (rooms[room_name].players.length == 0) {   
+            rooms[room_name].game.Stop();
             delete rooms[room_name];
         }
-
-        console.log(players);
-        console.log(JSON.stringify(rooms));
-        console.log("**********************");
     });   
-
+    
     socket.on('join_room_client', (data) => {
         // if (users[socket.id]){ //if user exist on a room don't use it 
         //     return;
@@ -79,13 +76,13 @@ io.on('connection', (socket) => {
             rooms[room_id] = {};
             rooms[room_id]['players'] = [];
         }
-
+        
         // only two players can play in a room
         if (rooms[room_id]['players'].length == 2) return;
-
+        
         let coords;
         let side;
-
+        
         let myGame ;
         if (rooms[room_id]['players'].length == 0){ // first player, new room
             side = Math.floor(Math.random() * 2); // choose a side randomly between 0 and 1 (left or right)
@@ -99,27 +96,27 @@ io.on('connection', (socket) => {
         
         // set up side coords
         if (side == 0) // left
-            coords = {x:padding, y: TAM_GAME.height/2};
+        coords = {x:padding, y: TAM_GAME.height/2};
         else // right
-            coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
-
+        coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
+        
         const newPlayer = myGame.SpawnPlayer(TAM_PLAYER, coords, colors[side], 10, socket.id ,`Player${side}`, 0); // debug only
-
+        
         // set player inside the room
         rooms[room_id]['players'].push({
             side: side,
             player: newPlayer
         });            
-
+        
         players[socket.id] = {
             room: room_id,
         };
         
-
+        
         socket.join(room_id);
-
+        
         // socket.broadcast.to(room_id).emit('server', 'New Player Joined: ' + socket.id);
-
+        
         console.log(JSON.stringify(rooms));
         
         // room: rooms[room_id] to get players and each side players
@@ -127,18 +124,21 @@ io.on('connection', (socket) => {
             room: rooms[room_id],
             TAM_GAME: TAM_GAME
         }};
-
+        
         io.to(room_id).emit('join_room_server', response);
-
+        
         // start the game if room is full
         if (rooms[room_id]['players'].length == 2){
+            console.log(players);
+            console.log(JSON.stringify(rooms));
+            console.log("**********************");
             let ball = myGame.SpawnBall({width:24, height:24}, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, 'black', 10);
             io.to(room_id).emit('set_ball_server', {
                 ball: ball,
             });
 
             io.to(room_id).emit('start_game_server');
-
+            
             //start game
             myGame.Run(
                 (game) => {
@@ -150,19 +150,19 @@ io.on('connection', (socket) => {
                                 playerId: id
                             });
                         }
-                    ); // Move the player (key pressed)
-                    game.BallMove(
-                        (ballPos) => {
-                            // console.log(`Player ${id} moved to ${playerPos}`);
-                            io.to(room_id).emit('update_ball_pos_server', {
-                                ballPos: ballPos
-                            });
-                        }
-                    ); // Move the ball
-                },
-            );
-        }
-        
+                        ); // Move the player (key pressed)
+                        game.BallMove(
+                            (ballPos) => {
+                                // console.log(`Move Ball`);
+                                io.to(room_id).emit('update_ball_pos_server', {
+                                    ballPos: ballPos
+                                });
+                            }
+                            ); // Move the ball
+                        },
+                        );
+                    }
+                    
         // if (rooms[room_id] && rooms[room_id].length == 2){
         //     const emit_server = (room) => {
         //         // console.log(`emiting to: ${room}`);

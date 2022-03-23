@@ -5,14 +5,30 @@
 // canvas.height = innerHeight;
 
 class GMath {
-    static NormalizeVector(vec){
-        let mod = Math.sqrt(vec[0]*vec[0] + vec[1]*vec[1]);
-        let mov = [0, 0];
+    static NormalizeVector(vec, type_vector=true){
+        // vector is given as a vector [x, y]
+        if (type_vector) {
+            let mod = Math.sqrt(vec[0]*vec[0] + vec[1]*vec[1]);
+            let mov = [0, 0];
+            if (mod != 0){
+                mov = [vec[0]/mod, vec[1]/mod];
+            }
+
+            return mov;
+        }
+
+        // vector is given as object {x: , y: }
+        let mod = Math.sqrt(vec.x ** 2 + vec.y ** 2);
+        let mov = {x: 0, y: 0};
         if (mod != 0){
-            mov = [vec[0]/mod, vec[1]/mod];
+            mov = {x: vec.x/mod, y: vec.y/mod};
         }
 
         return mov;
+    }
+
+    static GetVector(pos1, pos2){
+        return {x: pos2.x-pos1.x, y: pos2.y-pos1.y};
     }
 }
 
@@ -178,11 +194,25 @@ class Ball extends Pawn{
     }
 
     CheckCollisionPlayer(player){
+        let collision = {x: this.CheckXCollision(player), y: this.CheckYCollision(player)};
 
+        return collision;
     }
 
     GetPos(){
         return this.pos;
+    }
+
+    CheckXCollision(player){
+        if (this.pos.x + this.size.width/2 < player.pos.x - player.size.width/2) return false;
+        if (this.pos.x - this.size.width/2 > player.pos.x + player.size.width/2) return false;
+        return true;
+    }
+
+    CheckYCollision(player){
+        if (this.pos.y + this.size.height/2 < player.pos.y - player.size.height/2) return false;
+        if (this.pos.y - this.size.height/2 > player.pos.y + player.size.height/2) return false;
+        return true;
     }
 }
 
@@ -276,26 +306,82 @@ class GameState{
 //         context.stroke();        
 //     }
 // }
+class GameMode{
+    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, END: 3};
+    static GAME_TYPE = {CLASIC: 0, RAMBLE: 1};
+    static GAME_MODALITY = {SINGLE: 0, MULTI: 1};
+    
+    constructor(){
+        this.myGameState = GameMode.GAME_STATE.MENU;
+        this.myGameType = GameMode.GAME_TYPE.CLASIC;
+        this.myGameModality = GameMode.GAME_MODALITY.MULTI;
+    }
+
+    UpdateState(state){
+        this.myGameState = state;
+    }
+
+    UpdateType(type){
+        this.myGameType = type;
+    }
+
+    UpdateModality(modality){
+        this.myGameModality = modality;
+    }
+
+    GetGameState(){
+        return this.myGameState;
+    }
+
+    GetGameType(){
+        return this.myGameType;
+    }
+
+    GetGameModality(){
+        return this.myGameModality;
+    }
+}
 
 class Game{
     constructor(tam, fps){
         this.myGameState = new GameState();
+        this.myGameMode = new GameMode();
+
         this.size_canvas = tam;
         this.gameFrec = 1000/fps;
-        this.gameStarted = false;
+        this.gameLoop = null;
         // const GAME_CHECK_INTERV = 100;
     }
 
     Run(...runtimeFuncs){
-        this.gameStarted = true;
+        // Wait until all players are connected
+        if (this.myGameMode.GetGameState() == GameMode.GAME_STATE.MENU){
+            return new Promise((resolve, reject) => {
+                let players = this.myGameState.GetAllPlayers();
+                let numPlayers = Object.keys(players).length;
+                let numPlayersConnected = 0;
+                gameLoop = setInterval(() => {
+                    if (numPlayersConnected == numPlayers){
+                        clearInterval(interval);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
 
+            
+        
         // replicate functions ( ...func(game) )
-        setInterval(() => {
+        this.gameLoop = setInterval(() => {
             // game loop
             runtimeFuncs.forEach( func => {
                 func(this);
             });
         }, this.gameFrec); // Maybe split and change to GAME_CHECK_INTERV if overloaded server
+    }
+
+    Stop(){
+        clearInterval(this.gameLoop);
     }
     
     PlayerMove(replicated){
@@ -312,8 +398,21 @@ class Game{
         if (ball == null) return;
 
         ball.Move(this.size_canvas);
+        
+        const players = this.myGameState.GetAllPlayers();
+        for (let id in players) {
+            let player = players[id];
+            let collisions = ball.CheckCollisionPlayer(player);
+
+            if (collisions.x && collisions.y) {
+                // get the vector Player------>Ball
+                let col_dir = GMath.GetVector(player.pos, ball.pos);
+                ball.direction = GMath.NormalizeVector(col_dir, false);
+            }
+            
+        }
+
         replicated(ball.GetPos());
-    
     }
 
     GetPlayer(idPlayer){
@@ -394,7 +493,7 @@ class Game{
     }
 }
 
-module.exports = Game;
+module.exports = {Game, GameMode};
 
 // function test(args, ...funcs){
 //     let i=0;
