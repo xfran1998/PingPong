@@ -13,10 +13,31 @@
 </head>
 <body>
     <div class="container">
-        <h1>Ping Socker 2022</h1>
+        <h1>Pong Socker</h1>
         <input type="text" id="room-name">        
         <button id="join-room">Join Room</button>
     </div>
+    <from class="setting-container">
+        <div class="form-container">
+            <label for="name-player1">Player1</label>
+            <input side="0" type="text" id="name-player1">
+        </div>
+        <div class="form-container">
+            <label for="name-player2">Player2</label>
+            <input side="1" type="text" id="name-player2">
+        </div>
+        <div class="form-container">
+            <label for="player-size">Players Size</label>
+            <input type="range" min="30" max="100" step="5" name="player-size" id="player-size">
+        </div>
+        <div class="form-container">
+            <label for="player-speed">Players Speed</label>
+            <input type="range" min="30" max="100" step="5" name="player-size" id="player-size">
+        </div> 
+        <div class="form-container">
+            <input type="submit" value="Start">
+        </div>  
+    </from>
     <canvas id="game" class="hidden"></canvas>
     <script src="./socket.io/socket.io.js"></script>
     <script src="./js/main.js" type="module"></script>

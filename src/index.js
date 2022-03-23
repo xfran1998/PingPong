@@ -20,12 +20,12 @@ const io = socketio(server);
 const players = {};
 const rooms = {};
 
-// 960, 468.5
-// 1920 937
+// initial game values
 const TAM_GAME = {width: 600, height: 350};
 const FPS = 60;
 const padding = 20;
 const TAM_PLAYER = {width: 10, height: 50};
+const PLAYER_SPEED = 10;
 
 // Seteando carpeta estatica, carpeta donde contiene todos los datos que requiere el usuario cuando hace la peticion
 // a la web buscando recursos.
@@ -96,11 +96,11 @@ io.on('connection', (socket) => {
         
         // set up side coords
         if (side == 0) // left
-        coords = {x:padding, y: TAM_GAME.height/2};
+            coords = {x:padding, y: TAM_GAME.height/2};
         else // right
-        coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
+            coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
         
-        const newPlayer = myGame.SpawnPlayer(TAM_PLAYER, coords, colors[side], 10, socket.id ,`Player${side}`, 0); // debug only
+        const newPlayer = myGame.SpawnPlayer(TAM_PLAYER, coords, colors[side], PLAYER_SPEED, socket.id ,`Player${side}`, 0); // debug only
         
         // set player inside the room
         rooms[room_id]['players'].push({
@@ -117,7 +117,7 @@ io.on('connection', (socket) => {
         
         // socket.broadcast.to(room_id).emit('server', 'New Player Joined: ' + socket.id);
         
-        console.log(JSON.stringify(rooms));
+        // console.log(JSON.stringify(rooms));
         
         // room: rooms[room_id] to get players and each side players
         let response = {status: 200, response: {
@@ -129,10 +129,8 @@ io.on('connection', (socket) => {
         
         // start the game if room is full
         if (rooms[room_id]['players'].length == 2){
-            console.log(players);
-            console.log(JSON.stringify(rooms));
-            console.log("**********************");
             let ball = myGame.SpawnBall({width:24, height:24}, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, 'black', 10);
+
             io.to(room_id).emit('set_ball_server', {
                 ball: ball,
             });

@@ -93,8 +93,6 @@ class GameState{
         
         this.players = {};
         roomPlayers.forEach(playerSettings => {
-            // console.log('playerSettings');
-            // console.log(playerSettings);
             this.players[playerSettings.player.id] = {
                 player: playerSettings.player,
                 side: playerSettings.side,

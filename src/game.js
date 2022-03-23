@@ -256,63 +256,13 @@ class GameState{
     }
 }
 
-// Client Side
-// class Display{
-//     static Draw(myGameState, context){
-//         Display.ClearScreen(context);
-
-//         myGameState.projectiles.forEach(proj => {
-//             Display.DrawPawn(proj, context);
-//         });
-        
-//         myGameState.players.forEach(player => {
-//             Display.DrawPawn(player, context);
-//         });
-
-//         let player = myGame.myGameState.players[0];
-//         Display.DrawHealthBar(player, context);
-//     }
-
-//     static DrawPawn(pawn, context){
-//         context.beginPath();
-//         context.arc(pawn.pos.x, pawn.pos.y, pawn.size, 0, Math.PI*2, false);  
-//         context.fillStyle = pawn.color;           
-//         context.fill(); 
-//     }
-
-//     static ClearScreen(context){
-//         const tam = canvas.getBoundingClientRect();
-//         context.clearRect(0, 0, tam.width, tam.height);
-//     }
-
-//     static DrawHealthBar(player, context){
-//         // Border
-//         let pos = [20,20];
-//         let tamBorder = [200, 30];
-//         let tamHealth = [player.health, 30];
-//         let stroke = 3;
-
-//         // Player green health
-//         context.beginPath();
-//         context.rect(pos[0], pos[1], tamHealth[0], tamHealth[1]);
-//         context.fillStyle = "green";           
-//         context.fill(); 
-        
-//         // Border of the player health
-//         context.beginPath();
-//         context.rect(pos[0], pos[1], tamBorder[0], tamBorder[1]);
-//         context.lineWidth = stroke;
-//         context.strokeStyle = 'black';
-//         context.stroke();        
-//     }
-// }
 class GameMode{
     static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, END: 3};
-    static GAME_TYPE = {CLASIC: 0, RAMBLE: 1};
-    static GAME_MODALITY = {SINGLE: 0, MULTI: 1};
+    static GAME_TYPE = {CLASIC: 0, RAMBLE: 1}; // Ramble: habilities or random changes
+    static GAME_MODALITY = {SINGLE: 0, MULTI: 1}; // Single: one player (we will need a basic AI), Multi: multiplayer
     
     constructor(){
-        this.myGameState = GameMode.GAME_STATE.MENU;
+        this.myGameState = GameMode.GAME_STATE.PLAYING;
         this.myGameType = GameMode.GAME_TYPE.CLASIC;
         this.myGameModality = GameMode.GAME_MODALITY.MULTI;
     }
@@ -345,7 +295,7 @@ class GameMode{
 class Game{
     constructor(tam, fps){
         this.myGameState = new GameState();
-        this.myGameMode = new GameMode();
+        this.myGameMode = new GameMode(); // default game mode settings
 
         this.size_canvas = tam;
         this.gameFrec = 1000/fps;
@@ -353,23 +303,22 @@ class Game{
         // const GAME_CHECK_INTERV = 100;
     }
 
-    Run(...runtimeFuncs){
+    // let players = this.myGameState.GetAllPlayers();
+    // let numPlayers = Object.keys(players).length;
+    // let numPlayersConnected = 0;
+
+    async Run(...runtimeFuncs){ /// if this asycn and socket.io is sync ????
         // Wait until all players are connected
-        if (this.myGameMode.GetGameState() == GameMode.GAME_STATE.MENU){
+        if (this.myGameMode.GetGameState() == GameMode.GAME_STATE.MENU){        
             return new Promise((resolve, reject) => {
-                let players = this.myGameState.GetAllPlayers();
-                let numPlayers = Object.keys(players).length;
-                let numPlayersConnected = 0;
                 gameLoop = setInterval(() => {
-                    if (numPlayersConnected == numPlayers){
+                    if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.MENU){
                         clearInterval(interval);
                         resolve();
                     }
                 }, 100);
             });
         }
-
-            
         
         // replicate functions ( ...func(game) )
         this.gameLoop = setInterval(() => {
@@ -381,7 +330,8 @@ class Game{
     }
 
     Stop(){
-        clearInterval(this.gameLoop);
+        if (this.gameLoop != null) 
+            clearInterval(this.gameLoop);
     }
     
     PlayerMove(replicated){
