@@ -102,6 +102,10 @@ class GameState{
             this.players[id].player.SetPos(posPlayers[id]);
         }
     }
+
+    SetPlayerPos(id, pos){
+        this.players[id].player.SetPos(pos);
+    }
 }
 
 export { GameState, Display };

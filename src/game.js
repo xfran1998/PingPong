@@ -34,21 +34,21 @@ class Pawn{
 
         let hit_borders = {x_axis:false, y_axis:false}; 
         // Check inside cambas x axis
-        if (newPos[0] < this.size.x/2 ){
-            newPos[0] = this.size.x/2;
+        if (newPos[0] < this.size.width/2 ){
+            newPos[0] = this.size.width/2;
             hit_borders.x_axis = true;
         }
-        if (newPos[0] > canvas_size.width - this.size.x/2){
-            newPos[0] = canvas_size.width - this.size.x/2;
+        if (newPos[0] > canvas_size.width - this.size.width/2){
+            newPos[0] = canvas_size.width - this.size.width/2;
             hit_borders.x_axis = true;
         }
         // Check inside cambas y axis
-        if (newPos[1] < this.size.y/2){
-            newPos[1] = this.size.y/2;
+        if (newPos[1] < this.size.height/2){
+            newPos[1] = this.size.height/2;
             hit_borders.y_axis = true;
         }
-        if (newPos[1] > canvas_size.height - this.size.y/2){
-            newPos[1] = canvas_size.height - this.size.y/2;
+        if (newPos[1] > canvas_size.height - this.size.height/2){
+            newPos[1] = canvas_size.height - this.size.height/2;
             hit_borders.y_axis = true;
         }
 
@@ -72,12 +72,14 @@ class Player extends Pawn{
 
     // Move toward espefic target, this a
     Move(canvas_size){
-        // if 
+        if (this.keysPress.length == 0){
+            return false;
+        }
 
         let vel_dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
-    
-        return super.UpdateValid(vel_dir, canvas_size);
-        // console.log((center[0]*2-this.size) > this.pos[0] && this.pos[0] > (0+this.size));
+        super.UpdateValid(vel_dir, canvas_size);
+        
+        return true;
     }
 
     GetPos(){
@@ -253,9 +255,9 @@ class Game{
             });
         }, this.gameFrec); // Maybe split and change to GAME_CHECK_INTERV if overloaded server
     }
-
     
     PlayerMove(replicated=null){
+        console.log(replicated);
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
             if (players[id].Move(this.size_canvas) && replicated != null)
@@ -271,17 +273,10 @@ class Game{
         }   
     }
 
-    SpawnPlayer(idPlayer, size, pos, color, speed, name, health){
-        // const x = innerWidth / 2;
-        // const y = innerHeight / 2;
-        // const size = 50;
-        // const pos = [x, y];
-        // const color = 'blue';
-        // const speed = 1;
-        // const name = "Player01";
-
-        const newPlayer = new Player(size, pos, color, speed, name, health);
+    SpawnPlayer(size, pos, color, speed, idPlayer, name, score){
+        const newPlayer = new Player(size, pos, color, speed, name, score);
         this.myGameState.AddPlayer(idPlayer, newPlayer);
+
         return newPlayer;
     }
     
@@ -299,12 +294,6 @@ class Game{
             players[input.idPlayer].KeyReleassed(input.key); // if it's delete the key
     }
 
-//     D:\Web\JS-WebSocket-Game_Dummy\src\Game.js:364
-//             players[input.idPlayer].KeyReleassed(input.key); // if it's delete the key
-//                                     ^
-
-//     TypeError: Cannot read properties of undefined (reading 'KeyReleassed')
-
     GetGameState(){
         return this.myGameState;
     }
@@ -314,7 +303,7 @@ class Game{
         let keysPress = {};
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
-            keysPress[players[id].GetName()] = players[id].GetKeyPressed();
+            keysPress[id] = players[id].GetKeyPressed();
         }
 
         return keysPress;
@@ -324,7 +313,7 @@ class Game{
         let dirPlayers = {};
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
-            dirPlayers[players[id].GetName()] = players[id].GetDirection();
+            dirPlayers[id] = players[id].GetDirection();
         }
 
         return dirPlayers;

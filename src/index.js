@@ -62,20 +62,6 @@ io.on('connection', (socket) => {
         console.log(JSON.stringify(rooms));
         console.log("**********************");
     });   
-        
-    // socket.on('client_key', (room_id) => {
-    //     socket.broadcast.emit('server', room_id);
-    // });
-            
-    // socket.on('client_move', (move) =>{
-    // users[socket.id].x += move.x;
-    // users[socket.id].y += move.y;
-    
-    // console.log("**** MOVING ****");
-    // console.log(users);
-    // console.log(rooms);
-    // console.log("**********************");
-    // });
 
     socket.on('join_room_client', (data) => {
         // if (users[socket.id]){ //if user exist on a room don't use it 
@@ -148,7 +134,10 @@ io.on('connection', (socket) => {
                 (game) => {
                     game.PlayerMove(
                         (playerPos, id) => {
-                            io.to(room_id).emit('update_players_server', );
+                            io.to(room_id).emit('update_player_pos_server', {
+                                playerPos: playerPos,
+                                playerId: id
+                            });
                         }
                     ); // Move the player (key pressed)
                 },

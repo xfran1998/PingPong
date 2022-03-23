@@ -35,7 +35,7 @@ socket.on('start_game_server', () => {
 
 });
 
-socket.on('update_players_server', (info) => {
+socket.on('update_player_pos_server', (info) => {
     Display.myGameState.SetPlayerPos(info.players, info.player_id);
 });
 
