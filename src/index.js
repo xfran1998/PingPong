@@ -24,7 +24,8 @@ const rooms = {};
 // 1920 937
 const TAM_GAME = {width: 600, height: 350};
 const FPS = 60;
-const padding = 10;
+const padding = 20;
+const TAM_PLAYER = {width: 10, height: 50};
 
 // Seteando carpeta estatica, carpeta donde contiene todos los datos que requiere el usuario cuando hace la peticion
 // a la web buscando recursos.
@@ -102,7 +103,7 @@ io.on('connection', (socket) => {
         else // right
             coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
 
-        const newPlayer = myGame.SpawnPlayer({width: 6, height: 16}, coords, colors[side], 10, socket.id ,`Player${side}`, 0); // debug only
+        const newPlayer = myGame.SpawnPlayer(TAM_PLAYER, coords, colors[side], 10, socket.id ,`Player${side}`, 0); // debug only
 
         // set player inside the room
         rooms[room_id]['players'].push({
@@ -138,7 +139,7 @@ io.on('connection', (socket) => {
                 (game) => {
                     game.PlayerMove(
                         (playerPos, id) => {
-                            console.log(`Player ${id} moved to ${playerPos}`);
+                            // console.log(`Player ${id} moved to ${playerPos}`);
                             io.to(room_id).emit('update_player_pos_server', {
                                 playerPos: playerPos,
                                 playerId: id

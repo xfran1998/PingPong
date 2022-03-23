@@ -23,15 +23,15 @@ socket.on('join_room_server', (data) => {
         return;
     }
 
-    console.log(data.response);
-    console.log(socket.id);
+    // console.log(data.response);
+    // console.log(socket.id);
     inside_game = true;
     DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
 });
 
 
 socket.on('start_game_server', () => {
-    alert('****  GAME START  ****');
+    console.log('****  GAME START  ****');
 
 });
 

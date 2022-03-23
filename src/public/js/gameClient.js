@@ -10,7 +10,7 @@ class Display{
         let players = this.myGameState.GetPlayers();
 
         for (let id in players) {
-            console.log('id: ', players[id]);
+            // console.log('id: ', players[id]);
             Display.DrawPlayer(players[id].player);
         }
 
@@ -38,10 +38,6 @@ class Display{
     }
 
     static DrawPlayer(player){
-        console.log('x1: ', player.pos.x - player.size.width/2);
-        console.log('y1: ', player.pos.y - player.size.height/2);
-        console.log('x2: ', player.pos.x + player.size.width/2);
-        console.log('y2: ', player.pos.y + player.size.height/2);
 
         this.context.beginPath();
         this.context.rect(player.pos.x - player.size.width/2, player.pos.y - player.size.height/2, player.size.width, player.size.height);
@@ -84,13 +80,13 @@ class GameState{
     }
     
     SetPlayers(roomPlayers, socked_id){
-        console.log('roomPlayers');
-        console.log(roomPlayers);
+        // console.log('roomPlayers');
+        // console.log(roomPlayers);
         
         this.players = {};
         roomPlayers.forEach(playerSettings => {
-            console.log('playerSettings');
-            console.log(playerSettings);
+            // console.log('playerSettings');
+            // console.log(playerSettings);
             this.players[playerSettings.player.id] = {
                 player: playerSettings.player,
                 side: playerSettings.side,
@@ -98,8 +94,8 @@ class GameState{
             }
         });
 
-        console.log('this.players');
-        console.log(this.players);
+        // console.log('this.players');
+        // console.log(this.players);
     }
 
     GetPlayers(){

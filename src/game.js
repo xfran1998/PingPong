@@ -25,33 +25,35 @@ class Pawn{
     }
 
     Update(vel_dir){
-        this.pos = [this.pos[0]+vel_dir[0]*this.speed, this.pos[1]+vel_dir[1]*this.speed];
+        this.pos = [this.pos.x+vel_dir[0]*this.speed, this.pos.y+vel_dir[1]*this.speed];
         // console.log(tarjetPos);
     }  
 
     UpdateValid(vel_dir, canvas_size){
-        let newPos = [this.pos[0]+vel_dir[0]*this.speed, this.pos[1]+vel_dir[1]*this.speed];
+        this.pos.x += vel_dir[0]*this.speed;
+        this.pos.y += vel_dir[1]*this.speed;
 
         let hit_borders = {x_axis:false, y_axis:false}; 
         // Check inside cambas x axis
-        if (newPos[0] < this.size.width/2 ){
-            newPos[0] = this.size.width/2;
+        if (this.pos.x < this.size.width/2 ){
+            this.pos.x = this.size.width/2;
             hit_borders.x_axis = true;
         }
-        if (newPos[0] > canvas_size.width - this.size.width/2){
-            newPos[0] = canvas_size.width - this.size.width/2;
+        if (this.pos.x > canvas_size.width - this.size.width/2){
+            this.pos.x = canvas_size.width - this.size.width/2;
             hit_borders.x_axis = true;
         }
         // Check inside cambas y axis
-        if (newPos[1] < this.size.height/2){
-            newPos[1] = this.size.height/2;
+        if (this.pos.y < this.size.height/2){
+            this.pos.y = this.size.height/2;
             hit_borders.y_axis = true;
         }
-        if (newPos[1] > canvas_size.height - this.size.height/2){
-            newPos[1] = canvas_size.height - this.size.height/2;
+        if (this.pos.y > canvas_size.height - this.size.height/2){
+            this.pos.y = canvas_size.height - this.size.height/2;
             hit_borders.y_axis = true;
         }
 
+        // console.log('pos2:'+this.pos.x+','+this.pos.y);
         return hit_borders;
     }  
 
@@ -92,7 +94,6 @@ class Player extends Pawn{
 
     UpdateDir(){
         let dirPressed = {x: false, y: false}; // x direccion not pressed and y the same
-        console.log(this.keysPress);
         this.keysPress.forEach( (key) => {
             // console.log(`key: ${key}`);
             // if ((key == 'a' || key == 'A')){
@@ -125,19 +126,21 @@ class Player extends Pawn{
         
         this.keysPress.push(key); // Add key to keysPress array
         this.UpdateDir();
+        // console.log('direction-pres: ' + JSON.stringify(this.direction));
     }
     
     KeyReleassed(key){
         let ind = this.keysPress.indexOf(key);
-
+        
         if (ind == -1) return;
-
+        
         this.keysPress.splice(ind,1);
-
-        console.log(`Released: ${key}`);
+        
+        // console.log(`Released: ${key}`);
         this.UpdateDir();
+        // console.log('direction-rel: ' + JSON.stringify(this.direction));
     }
-
+    
     GetKeyPressed(){
         return this.keysPress;
     }
@@ -205,7 +208,7 @@ class GameState{
 
 //     static DrawPawn(pawn, context){
 //         context.beginPath();
-//         context.arc(pawn.pos[0], pawn.pos[1], pawn.size, 0, Math.PI*2, false);  
+//         context.arc(pawn.pos.x, pawn.pos.y, pawn.size, 0, Math.PI*2, false);  
 //         context.fillStyle = pawn.color;           
 //         context.fill(); 
 //     }
