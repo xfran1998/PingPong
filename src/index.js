@@ -132,6 +132,11 @@ io.on('connection', (socket) => {
 
         // start the game if room is full
         if (rooms[room_id]['players'].length == 2){
+            let ball = myGame.SpawnBall({width:24, height:24}, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, 'black', 10);
+            io.to(room_id).emit('set_ball_server', {
+                ball: ball,
+            });
+
             io.to(room_id).emit('start_game_server');
 
             //start game
@@ -146,6 +151,14 @@ io.on('connection', (socket) => {
                             });
                         }
                     ); // Move the player (key pressed)
+                    game.BallMove(
+                        (ballPos) => {
+                            // console.log(`Player ${id} moved to ${playerPos}`);
+                            io.to(room_id).emit('update_ball_pos_server', {
+                                ballPos: ballPos
+                            });
+                        }
+                    ); // Move the ball
                 },
             );
         }

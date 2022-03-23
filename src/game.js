@@ -158,17 +158,54 @@ class Player extends Pawn{
     }
 }
 
+
+class Ball extends Pawn{
+    constructor(size, pos, color, speed){
+        super(size, pos, color, speed);
+        this.direction = {x: 1, y: 1};
+    }
+
+    Move(canvas_size){
+        let vel_dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
+        let hit_borders = super.UpdateValid(vel_dir, canvas_size)
+        
+        if (hit_borders.x_axis){
+            this.direction.x *= -1;
+        }
+        if (hit_borders.y_axis){
+            this.direction.y *= -1; // GG
+        }
+    }
+
+    CheckCollisionPlayer(player){
+
+    }
+
+    GetPos(){
+        return this.pos;
+    }
+}
+
 class GameState{
     constructor(){
         this.players = {};
+        this.ball = null;
     }
 
     AddPlayer(idPlayer, newPlayer){
         this.players[idPlayer] = newPlayer;
     }
 
+    AddBall(newBall){
+        this.ball = newBall;
+    }
+
     GetAllPlayers(){
         return this.players;
+    }
+
+    GetBall(){
+        return this.ball;
     }
 
     SetPlayers(players){
@@ -261,17 +298,22 @@ class Game{
         }, this.gameFrec); // Maybe split and change to GAME_CHECK_INTERV if overloaded server
     }
     
-    PlayerMove(replicated=null){
+    PlayerMove(replicated){
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
-            // if (players[id].Move(this.size_canvas))
-            //     console.log('Move');
-            // if (replicated != null)
-            //     console.log('Replciated'); 
-
-            if (players[id].Move(this.size_canvas) && replicated != null)
+            if (players[id].Move(this.size_canvas))
                 replicated(players[id].GetPos(), id);
         }
+    }
+    
+    BallMove(replicated){
+        let ball = this.myGameState.GetBall();    
+
+        if (ball == null) return;
+
+        ball.Move(this.size_canvas);
+        replicated(ball.GetPos());
+    
     }
 
     GetPlayer(idPlayer){
@@ -289,8 +331,19 @@ class Game{
         return newPlayer;
     }
 
+    SpawnBall(size, pos, color, speed){
+        const newBall = new Ball(size, pos, color, speed);
+        this.myGameState.AddBall(newBall);
+
+        return newBall;
+    }
+
     DeletePlayer(idPlayer){
         this.myGameState.DeletePlayer(idPlayer);
+    }
+
+    DeleteBall(){
+        this.myGameState.ball = null;
     }
     
     /*

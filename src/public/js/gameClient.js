@@ -14,6 +14,7 @@ class Display{
             Display.DrawPlayer(players[id].player);
         }
 
+        Display.DrawBall();
         // let player = myGame.myGameState.players[0];
         // Display.DrawHealthBar(player, this.context);
 
@@ -33,16 +34,23 @@ class Display{
         this.myGameState.SetPlayers(roomPlayers, socked_id);
     }
 
-    static SetPlayer(player){
-
-    }
-
     static DrawPlayer(player){
 
         this.context.beginPath();
         this.context.rect(player.pos.x - player.size.width/2, player.pos.y - player.size.height/2, player.size.width, player.size.height);
         this.context.fillStyle = player.color;           
         this.context.fill(); 
+        this.context.closePath();
+    }
+
+    static DrawBall(){
+        let ball = this.myGameState.GetBall();
+        if (!ball) return;
+
+        this.context.beginPath();
+        this.context.arc(ball.pos.x, ball.pos.y, ball.size.width/2, 0, 2 * Math.PI);
+        this.context.fillStyle = ball.color;
+        this.context.fill();
         this.context.closePath();
     }
 
@@ -77,6 +85,7 @@ class Display{
 class GameState{
     constructor(){
         this.players = {};
+        this.ball = null;
     }
     
     SetPlayers(roomPlayers, socked_id){
@@ -98,8 +107,20 @@ class GameState{
         // console.log(this.players);
     }
 
+    SetBall(ball){
+        this.ball = ball;
+    }
+
+    SetBallPos(pos){
+        this.ball.pos = pos;
+    }
+
     GetPlayers(){
         return this.players;
+    }
+
+    GetBall(){
+        return this.ball;
     }
 
     SetPlayersPos(posPlayers){

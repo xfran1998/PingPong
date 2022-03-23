@@ -35,8 +35,16 @@ socket.on('start_game_server', () => {
 
 });
 
+socket.on('set_ball_server', (data) => {
+    Display.myGameState.SetBall(data.ball);
+});
+
 socket.on('update_player_pos_server', (info) => {
     Display.myGameState.SetPlayerPos(info.playerId, info.playerPos);
+});
+
+socket.on('update_ball_pos_server', (info) => {
+    Display.myGameState.SetBallPos(info.ballPos);
 });
 
 function DisplayCanvas(room, TAM_GAME, socked_id){
