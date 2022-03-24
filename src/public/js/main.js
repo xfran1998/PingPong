@@ -5,6 +5,7 @@ const container = document.querySelector('.container');
 const btn = document.querySelectorAll('.btn');
 const canvas = document.querySelector('#game');
 const context = canvas.getContext('2d');
+const settings_container = document.querySelector('.settings-container');
 
 let input = {
     type: false,
@@ -26,7 +27,9 @@ socket.on('join_room_server', (data) => {
     // console.log(data.response);
     // console.log(socket.id);
     inside_game = true;
-    DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
+    // DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
+    SetCanvas(data.response.room_players , data.response.TAM_GAME, socket.id);
+    DisplayMenu();
 });
 
 
@@ -47,17 +50,24 @@ socket.on('update_ball_pos_server', (info) => {
     Display.myGameState.SetBallPos(info.ballPos);
 });
 
-function DisplayCanvas(room, TAM_GAME, socked_id){
+function SetCanvas(room_players, TAM_GAME, socked_id){
     canvas.width = TAM_GAME.width;
     canvas.height = TAM_GAME.height;
 
     Display.SetContext(context);
     Display.SetGameState(new GameState());
-    Display.SetPlayers(room['players'], socked_id)
+    Display.SetPlayers(room_players, socked_id)
     Display.Draw();
-    
+}
+
+function DisplayCanvas(){
     canvas.classList.remove('hidden');
     container.classList.add('hidden');
+}
+
+function DisplayMenu(){
+    container.classList.add('hidden');
+    settings_container.classList.remove('hidden');
 }
 
 function UpdateKey(type, key){
@@ -110,3 +120,28 @@ $('#join-room').addEventListener('click', () => {
         room_id: room, 
     });
 });
+
+$('#start-game').addEventListener('click', () => {
+    getDataForm();
+});
+
+function searchKeyPress(e) {
+    e.preventDefault();
+    return false;
+  }
+  
+function SetRoomMenu(data){
+    socket.emit('set_room_menu_client', data);
+}
+
+function getDataForm(){
+    let data = {};
+    data.n_player1 = document.getElementById('name-player1').value;
+    data.n_player2 = document.getElementById('name-player2').value;
+    data.p_size = document.getElementById('player-size').value;
+    data.p_speed = document.getElementById('player-speed').value;
+    data.b_speed = document.getElementById('ball-speed').value;
+
+    console.log(data);
+    SetRoomMenu(data);
+}

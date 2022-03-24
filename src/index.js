@@ -87,6 +87,7 @@ io.on('connection', (socket) => {
         if (rooms[room_id]['players'].length == 0){ // first player, new room
             side = Math.floor(Math.random() * 2); // choose a side randomly between 0 and 1 (left or right)
             myGame = new Game(TAM_GAME, FPS);
+            StartRoom(myGame); // starts gameLoop
             rooms[room_id]['game'] = myGame;
         }
         else{
@@ -121,10 +122,11 @@ io.on('connection', (socket) => {
         
         // room: rooms[room_id] to get players and each side players
         let response = {status: 200, response: {
-            room: rooms[room_id],
+            room_players: rooms[room_id]['players'],
             TAM_GAME: TAM_GAME
         }};
         
+        console.log('response');
         io.to(room_id).emit('join_room_server', response);
         
         // start the game if room is full
@@ -138,28 +140,7 @@ io.on('connection', (socket) => {
             io.to(room_id).emit('start_game_server');
             
             //start game
-            myGame.Run(
-                (game) => {
-                    game.PlayerMove(
-                        (playerPos, id) => {
-                            // console.log(`Player ${id} moved to ${playerPos}`);
-                            io.to(room_id).emit('update_player_pos_server', {
-                                playerPos: playerPos,
-                                playerId: id
-                            });
-                        }
-                        ); // Move the player (key pressed)
-                        game.BallMove(
-                            (ballPos) => {
-                                // console.log(`Move Ball`);
-                                io.to(room_id).emit('update_ball_pos_server', {
-                                    ballPos: ballPos
-                                });
-                            }
-                            ); // Move the ball
-                        },
-                        );
-                    }
+            }
                     
         // if (rooms[room_id] && rooms[room_id].length == 2){
         //     const emit_server = (room) => {
@@ -188,7 +169,19 @@ io.on('connection', (socket) => {
         // // console.log(myGame.GetPlayersKeys());
         // console.log(myGame.GetPlayersDir());
         // console.log("**********************");
-    })
+    });
+    
+    socket.on('set_room_menu_client', (gameSettings) => {
+        // check if player exist
+        if (!players[socket.id]) return;
+        
+        // check if room exist
+        if (!rooms[players[socket.id].room]) return;
+        
+        let game = rooms[players[socket.id].room].game;
+        game.ChangeGameSetting(gameSettings);
+        myGame.SetGameMode(GameMode.GAME_STATE.WAITING_PLAYERS);
+    });
 
 
     // **** USER USES HABILITIES ****
@@ -212,5 +205,34 @@ io.on('connection', (socket) => {
         }
     });*/
 })
+
+function StartRoom(myGame){
+    myGame.Run();
+}
+
+function StartGame(myGame){
+    if (!myGame.IsBeheavurSet()){ // if beheavur is not set, set it
+        myGame.SetPlayingBeheavur((game) => {
+            game.PlayerMove(
+                (playerPos, id) => {
+                    // console.log(`Player ${id} moved to ${playerPos}`);
+                    io.to(room_id).emit('update_player_pos_server', {
+                        playerPos: playerPos,
+                        playerId: id
+                    });
+                }), // Move the player (key pressed)
+            game.BallMove(
+                (ballPos) => {
+                    // console.log(`Move Ball`);
+                    io.to(room_id).emit('update_ball_pos_server', {
+                        ballPos: ballPos
+                    });
+                }); // Move the ball
+            });
+        }
+
+    // Change game mode to playing
+    myGame.SetGameMode(GameMode.PLAYING);
+}
 
 server.listen(PORT, () => {console.log(`runing on port ${PORT}`);});

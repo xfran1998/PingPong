@@ -257,14 +257,16 @@ class GameState{
 }
 
 class GameMode{
-    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, END: 3};
+    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, FINISH_GAME: 3, END: 4};
     static GAME_TYPE = {CLASIC: 0, RAMBLE: 1}; // Ramble: habilities or random changes
     static GAME_MODALITY = {SINGLE: 0, MULTI: 1}; // Single: one player (we will need a basic AI), Multi: multiplayer
     
     constructor(){
-        this.myGameState = GameMode.GAME_STATE.PLAYING;
+        this.myGameState = GameMode.GAME_STATE.MENU;
         this.myGameType = GameMode.GAME_TYPE.CLASIC;
         this.myGameModality = GameMode.GAME_MODALITY.MULTI;
+        this.myBehaviour = null;
+        this.isBeheavurSet = false;
     }
 
     UpdateState(state){
@@ -290,6 +292,19 @@ class GameMode{
     GetGameModality(){
         return this.myGameModality;
     }
+
+    SetBeheavur(beheavur){
+        if (!beheavur)
+            this.myBehaviour = beheavur;
+    }
+
+    GetBeheavur(){
+        return this.myBehaviour;
+    }
+
+    IsBeheavurSet(){
+        return this.isBeheavurSet;
+    }
 }
 
 class Game{
@@ -301,37 +316,104 @@ class Game{
         this.gameFrec = 1000/fps;
         this.gameLoop = null;
         // const GAME_CHECK_INTERV = 100;
+
+        
     }
 
     // let players = this.myGameState.GetAllPlayers();
     // let numPlayers = Object.keys(players).length;
     // let numPlayersConnected = 0;
+    
+    WaitMenu(){
+        return new Promise((resolve, reject) => {
+            this.gameLoop = setInterval(() => {
+                if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.MENU){
+                    console.log('GameMenu finished');
+                    clearInterval(this.gameLoop);
+                    resolve();
+                }
+            }, 1000);
+        });
+    }
 
-    async Run(...runtimeFuncs){ /// if this asycn and socket.io is sync ????
-        // Wait until all players are connected
-        if (this.myGameMode.GetGameState() == GameMode.GAME_STATE.MENU){        
-            return new Promise((resolve, reject) => {
-                gameLoop = setInterval(() => {
-                    if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.MENU){
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 100);
-            });
+    WaitJoin(){
+        return new Promise((resolve, reject) => {
+            this.gameLoop = setInterval(() => {
+                if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.WAITING_PLAYERS){
+                    console.log('2 players connected');
+                    clearInterval(this.gameLoop);
+                    resolve();
+                }
+            }, 1000);
+        });
+    }
+    
+    WaitPlaying(){
+        return new Promise((resolve, reject) => {
+            let myBehaviour = this.myGameMode.GetBeheavur();
+
+            // reject if no behaviour
+            if (!myBehaviour)
+                reject();
+
+            this.gameLoop = setInterval(() => {
+                // game loop
+                runtimeFuncs.forEach( func => {
+                    func(this);
+                });
+                
+                if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.PLAYING){
+                    console.log('Acaba la partida crack');
+                    clearInterval(this.gameLoop);
+                    resolve();
+                }
+            }, this.gameFrec);
+        });   
+    }
+    
+    WaitFinish(){
+        return new Promise((resolve, reject) => {
+            this.gameLoop = setInterval(() => {
+                if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.FINISH_GAME){
+                    console.log('End finished');
+                    clearInterval(this.gameLoop);
+                    resolve();
+                }
+            }, 1000);
+        });    
+    }
+    
+    Run(){ /// if this asycn and socket.io is sync ????
+        // Change the game state untill game is finished
+        this.ChangeState();
+    }
+
+    async ChangeState(){
+        let state = this.myGameMode.GetGameState();
+
+        console.log('ChangeState: ' + state);
+        if (state == GameMode.GAME_STATE.MENU){
+            await this.WaitMenu();
         }
-        
-        // replicate functions ( ...func(game) )
-        this.gameLoop = setInterval(() => {
-            // game loop
-            runtimeFuncs.forEach( func => {
-                func(this);
-            });
-        }, this.gameFrec); // Maybe split and change to GAME_CHECK_INTERV if overloaded server
+        else if (state == GameMode.GAME_STATE.WAITING_PLAYERS){
+            await this.WaitJoin();
+        }
+        else if (state == GameMode.GAME_STATE.PLAYING){
+            await this.WaitPlaying();
+        }
+        else if (state == GameMode.GAME_STATE.FINISH_GAME){
+            await this.WaitFinish();
+        }
+
+        if (state != GameMode.GAME_STATE.END) // if gameLoop is not null then change state when the previous one is finished
+            this.ChangeState();
     }
 
     Stop(){
         if (this.gameLoop != null) 
             clearInterval(this.gameLoop);
+        
+        
     }
     
     PlayerMove(replicated){
@@ -440,6 +522,40 @@ class Game{
         info['players'] = this.GetGameState().GetAllPlayers();
 
         return info;
+    }
+
+    // Change game setting base on menu state
+    ChangeGameSetting(gameSettings){
+        let players = this.myGameState.GetAllPlayers();
+
+        // Change player settings (vel and size Y)
+        let cont=0;
+        for (let id in players) {
+            if (cont == 0) 
+                players[id].name = gameSettings.n_player1;
+            else
+                players[id].name = gameSettings.n_player2;
+
+            players[id].speed = gameSettings.p_speed;
+            cont++;
+        }
+
+        // Change ball settings
+        let ball = this.myGameState.GetBall();
+
+        ball.speed = gameSettings.b_speed;
+    }
+
+    SetPlayingBeheavur(behaviour){
+        this.myGameMode.SetBeheavur(behaviour); // player and ball beheavur
+    }
+
+    IsBeheavurSet(){
+        return this.myGameMode.IsBeheavurSet();
+    }
+
+    SetGameMode(gameMode){
+        this.myGameMode.myGameState = gameMode;
     }
 }
 
