@@ -50,6 +50,15 @@ socket.on('update_ball_pos_server', (info) => {
     Display.myGameState.SetBallPos(info.ballPos);
 });
 
+socket.on('waiting_player_server', (data) => {
+    console.log('disable inputs: ' + data.input_disable);
+    DisableAllInputs(data.input_disable, data.submit_text);
+});
+
+socket.on('start_playing_server', () => {
+    DisplayCanvas();
+});
+
 function SetCanvas(room_players, TAM_GAME, socked_id){
     canvas.width = TAM_GAME.width;
     canvas.height = TAM_GAME.height;
@@ -62,7 +71,7 @@ function SetCanvas(room_players, TAM_GAME, socked_id){
 
 function DisplayCanvas(){
     canvas.classList.remove('hidden');
-    container.classList.add('hidden');
+    settings_container.classList.add('hidden');
 }
 
 function DisplayMenu(){
@@ -144,4 +153,18 @@ function getDataForm(){
 
     console.log(data);
     SetRoomMenu(data);
+}
+
+function DisableAllInputs(disable, submit_text){
+    $$('input').forEach(input => {
+        if(disable)
+            input.classList.add('input-disabled');
+        else
+            input.classList.remove('input-disabled');
+    });
+
+    if (submit_text == 'Ready') // Only enable for player who is not ready
+        $('#start-game').classList.remove('input-disabled');
+
+    $('#start-game').value = submit_text;
 }

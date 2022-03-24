@@ -220,6 +220,8 @@ class GameState{
     constructor(){
         this.players = {};
         this.ball = null;
+        this.isPlayerWaiting = false;
+        this.room_id;
     }
 
     AddPlayer(idPlayer, newPlayer){
@@ -233,13 +235,25 @@ class GameState{
     GetAllPlayers(){
         return this.players;
     }
-
+    
     GetBall(){
         return this.ball;
     }
 
+    GetPlayerWaiting(){
+        return this.isPlayerWaiting;
+    }
+
     SetPlayers(players){
         this.players = players;
+    }
+
+    SetPlayerWaiting(isWaiting){
+        this.isPlayerWaiting = isWaiting;
+    }
+
+    SetRoomId(room_id){
+        this.room_id = room_id;
     }
 
     GetPlayersPos(){
@@ -294,8 +308,10 @@ class GameMode{
     }
 
     SetBeheavur(beheavur){
-        if (!beheavur)
+        if (!this.myBehaviour){
             this.myBehaviour = beheavur;
+            this.isBeheavurSet = true;
+        }
     }
 
     GetBeheavur(){
@@ -316,8 +332,6 @@ class Game{
         this.gameFrec = 1000/fps;
         this.gameLoop = null;
         // const GAME_CHECK_INTERV = 100;
-
-        
     }
 
     // let players = this.myGameState.GetAllPlayers();
@@ -351,16 +365,14 @@ class Game{
     WaitPlaying(){
         return new Promise((resolve, reject) => {
             let myBehaviour = this.myGameMode.GetBeheavur();
-
+            console.log('WaitPlaying: ' + myBehaviour);
             // reject if no behaviour
             if (!myBehaviour)
-                reject();
+                reject('No behaviour set');
 
             this.gameLoop = setInterval(() => {
                 // game loop
-                runtimeFuncs.forEach( func => {
-                    func(this);
-                });
+                myBehaviour(this);
                 
                 if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.PLAYING){
                     console.log('Acaba la partida crack');
@@ -477,6 +489,17 @@ class Game{
         this.myGameState.ball = null;
     }
     
+    SetPlayerWaiting(isWaiting){ // return true if the player is already waiting, so go to play state
+        if (this.myGameState.isWaiting && isWaiting) return true;
+
+        this.myGameState.isWaiting = isWaiting;
+        return false;
+    }
+
+    GetIsPlayerWaiting(){
+        return this.myGameState.isWaiting;
+    }
+
     /*
     *   input.idPlayer  :   Id of the socket the player is connected
     *   input.type      :   true = pressed , false = releassed     
@@ -556,6 +579,18 @@ class Game{
 
     SetGameMode(gameMode){
         this.myGameMode.myGameState = gameMode;
+    }
+
+    SetRoomId(roomId){
+        this.myGameMode.roomId = roomId;
+    }
+
+    GetRoomId(){
+        return this.myGameMode.roomId;
+    }
+
+    GetBall(){
+        return this.myGameState.GetBall();
     }
 }
 

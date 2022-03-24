@@ -4,6 +4,7 @@ const http = require('http');
 const socketio = require('socket.io');
 // const { randomInt } = require('crypto');
 const {Game, GameMode} = require('./game.js');
+const { disable } = require('express/lib/application');
 
 const app = express();
 const server = http.createServer(app);
@@ -87,6 +88,8 @@ io.on('connection', (socket) => {
         if (rooms[room_id]['players'].length == 0){ // first player, new room
             side = Math.floor(Math.random() * 2); // choose a side randomly between 0 and 1 (left or right)
             myGame = new Game(TAM_GAME, FPS);
+            myGame.SpawnBall({width:24, height:24}, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, 'black', 10);
+            myGame.SetRoomId(room_id);
             StartRoom(myGame); // starts gameLoop
             rooms[room_id]['game'] = myGame;
         }
@@ -126,15 +129,12 @@ io.on('connection', (socket) => {
             TAM_GAME: TAM_GAME
         }};
         
-        console.log('response');
         io.to(room_id).emit('join_room_server', response);
         
         // start the game if room is full
         if (rooms[room_id]['players'].length == 2){
-            let ball = myGame.SpawnBall({width:24, height:24}, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, 'black', 10);
-
             io.to(room_id).emit('set_ball_server', {
-                ball: ball,
+                ball: myGame.GetBall(),
             });
 
             io.to(room_id).emit('start_game_server');
@@ -178,9 +178,30 @@ io.on('connection', (socket) => {
         // check if room exist
         if (!rooms[players[socket.id].room]) return;
         
-        let game = rooms[players[socket.id].room].game;
-        game.ChangeGameSetting(gameSettings);
-        myGame.SetGameMode(GameMode.GAME_STATE.WAITING_PLAYERS);
+        let myGame = rooms[players[socket.id].room].game;
+
+        
+        if (!myGame.GetIsPlayerWaiting()){
+            myGame.ChangeGameSetting(gameSettings);
+            myGame.SetGameMode(GameMode.GAME_STATE.WAITING_PLAYERS);
+        }
+        
+        socket.broadcast.to(players[socket.id].room).emit('waiting_player_server', {
+            input_disable: true,
+            submit_text: 'Ready',
+        });
+        
+        socket.emit('waiting_player_server', {
+            input_disable: true,
+            submit_text: 'Waiting Player',
+        });
+        
+        if (myGame.SetPlayerWaiting(true)){
+            io.to(players[socket.id].room).emit('start_playing_server');
+            myGame.SetGameMode(GameMode.GAME_STATE.PLAYING);
+            
+        }
+        
     });
 
 
@@ -208,15 +229,16 @@ io.on('connection', (socket) => {
 
 function StartRoom(myGame){
     myGame.Run();
+    SetGameBeheavur(myGame);
 }
 
-function StartGame(myGame){
+function SetGameBeheavur(myGame){
     if (!myGame.IsBeheavurSet()){ // if beheavur is not set, set it
         myGame.SetPlayingBeheavur((game) => {
             game.PlayerMove(
                 (playerPos, id) => {
                     // console.log(`Player ${id} moved to ${playerPos}`);
-                    io.to(room_id).emit('update_player_pos_server', {
+                    io.to(myGame.GetRoomId()).emit('update_player_pos_server', {
                         playerPos: playerPos,
                         playerId: id
                     });
@@ -224,15 +246,12 @@ function StartGame(myGame){
             game.BallMove(
                 (ballPos) => {
                     // console.log(`Move Ball`);
-                    io.to(room_id).emit('update_ball_pos_server', {
+                    io.to(myGame.GetRoomId()).emit('update_ball_pos_server', {
                         ballPos: ballPos
                     });
                 }); // Move the ball
             });
         }
-
-    // Change game mode to playing
-    myGame.SetGameMode(GameMode.PLAYING);
 }
 
 server.listen(PORT, () => {console.log(`runing on port ${PORT}`);});
