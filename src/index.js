@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 const io = socketio(server,
     {
         cors: {
-            origin: `localhost:${PORT}`,
+            origin: `https://ping-pong-pm.herokuapp.com/`,
             methods: ["GET", "POST"],
             allowedHeaders: ["allow-pm-access"],
             credentials: true
