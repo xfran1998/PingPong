@@ -51,7 +51,7 @@ socket.on('update_ball_pos_server', (info) => {
 });
 
 socket.on('waiting_player_server', (data) => {
-    console.log('disable inputs: ' + data.input_disable);
+    // console.log('disable inputs: ' + data.input_disable);
     DisableAllInputs(data.input_disable, data.submit_text);
 });
 
@@ -151,7 +151,7 @@ function getDataForm(){
     data.p_speed = document.getElementById('player-speed').value;
     data.b_speed = document.getElementById('ball-speed').value;
 
-    console.log(data);
+    // console.log(data);
     SetRoomMenu(data);
 }
 

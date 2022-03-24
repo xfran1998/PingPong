@@ -365,7 +365,7 @@ class Game{
     WaitPlaying(){
         return new Promise((resolve, reject) => {
             let myBehaviour = this.myGameMode.GetBeheavur();
-            console.log('WaitPlaying: ' + myBehaviour);
+            // console.log('WaitPlaying: ' + myBehaviour);
             // reject if no behaviour
             if (!myBehaviour)
                 reject('No behaviour set');
