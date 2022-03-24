@@ -99,9 +99,6 @@ class GameState{
                 is_me: (socked_id == playerSettings.player.id)
             }
         });
-
-        // console.log('this.players');
-        // console.log(this.players);
     }
 
     SetBall(ball){
@@ -112,12 +109,26 @@ class GameState{
         this.ball.pos = pos;
     }
 
+    SetPlayerScore(id, score){
+        this.players[id].player.score = score;
+    }
+
     GetPlayers(){
         return this.players;
     }
 
     GetBall(){
         return this.ball;
+    }
+
+    GetPlayerScore(id){
+        return this.players[id].player.score;
+    }
+
+    GetPlayerId(data){
+        if (data.side){
+            return  this.players.filter(player => player.side == data.side)[0].player.id;
+        }
     }
 
     SetPlayersPos(posPlayers){

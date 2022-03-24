@@ -104,7 +104,7 @@ io.on('connection', (socket) => {
         else // right
             coords = {x: TAM_GAME.width - padding, y: TAM_GAME.height/2};
         
-        const newPlayer = myGame.SpawnPlayer(TAM_PLAYER, coords, colors[side], PLAYER_SPEED, socket.id ,`Player${side}`, 0); // debug only
+        const newPlayer = myGame.SpawnPlayer(TAM_PLAYER, coords, colors[side], PLAYER_SPEED, socket.id ,`Player${side}`, 0, side); // debug only
         
         // set player inside the room
         rooms[room_id]['players'].push({
@@ -232,7 +232,7 @@ function StartRoom(myGame){
     SetGameBeheavur(myGame);
 }
 
-function SetGameBeheavur(myGame){
+function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, THE GAME SHOULD STOP
     if (!myGame.IsBeheavurSet()){ // if beheavur is not set, set it
         myGame.SetPlayingBeheavur((game) => {
             game.PlayerMove(
@@ -244,12 +244,25 @@ function SetGameBeheavur(myGame){
                     });
                 }), // Move the player (key pressed)
             game.BallMove(
-                (ballPos) => {
+                (ballPos, hitSide) => {
                     // console.log(`Move Ball`);
                     io.to(myGame.GetRoomId()).emit('update_ball_pos_server', {
                         ballPos: ballPos
                     });
-                }); // Move the ball
+
+                    if (hitSide != -1){
+                        console.log('side: ' + (1-hitSide));
+                        let player_id = myGame.GetPlayerId({side: 1-hitSide}); // Get the player id of the player that hit the ball
+                        console.log('id: ' + player_id);
+
+                        myGame.AddScorePlayer(player_id);
+
+                        io.to(myGame.GetRoomId()).emit('update_score_server', {
+                            player_id: player_id,
+                            score: myGame.GetScorePlayer(player_id)
+                        });
+                    }
+                }) // Move the ball
             });
         }
 }

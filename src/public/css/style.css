@@ -82,6 +82,18 @@ input[type=range]::-webkit-slider-thumb {
     font-weight: 800;
 }
 
+.waveTop{
+    background-image: url("https://cdn.discordapp.com/attachments/651843244761808906/956489651659624458/wave-bot.png");
+}
+
+.waveMiddle{
+    background-image: url("https://cdn.discordapp.com/attachments/651843244761808906/956489652041302076/wave-mid.png");
+}
+
+.waveBottom{
+    background-image: url("https://cdn.discordapp.com/attachments/651843244761808906/956489651659624458/wave-bot.png");
+}
+
 .btn{
     width: fit-content;
     padding: 10px 20px;

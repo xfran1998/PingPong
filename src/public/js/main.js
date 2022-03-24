@@ -59,6 +59,11 @@ socket.on('start_playing_server', () => {
     DisplayCanvas();
 });
 
+socket.on('update_score_server', (data) => {
+    Display.myGameState.SetPlayerScore(data.player_id, data.score);
+    console.log('SCORE:' + data.player_id + ' - ' + data.score);
+});
+
 function SetCanvas(room_players, TAM_GAME, socked_id){
     canvas.width = TAM_GAME.width;
     canvas.height = TAM_GAME.height;

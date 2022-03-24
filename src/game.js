@@ -79,11 +79,12 @@ class Pawn{
 }
 
 class Player extends Pawn{
-    constructor(size, pos, color, speed, id, name, score){
+    constructor(size, pos, color, speed, id, name, score, side){
         super(size, pos, color, speed);
         this.id = id;
         this.name = name;
         this.score = score;
+        this.side = side;
         this.keysPress = [];
         this.direction = {x: 0, y: 0};
     }
@@ -183,14 +184,19 @@ class Ball extends Pawn{
 
     Move(canvas_size){
         let vel_dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
-        let hit_borders = super.UpdateValid(vel_dir, canvas_size)
-        
+        let hit_borders = super.UpdateValid(vel_dir, canvas_size);
+        let hitSide = -1;
+
         if (hit_borders.x_axis){
+            console.log('direction: ' + JSON.stringify(this.direction));
+            hitSide = (this.direction.x == 1) ? 1 : 0;
             this.direction.x *= -1;
         }
         if (hit_borders.y_axis){
             this.direction.y *= -1; // GG
         }
+
+        return hitSide;
     }
 
     CheckCollisionPlayer(player){
@@ -232,6 +238,10 @@ class GameState{
         this.ball = newBall;
     }
 
+    AddScorePlayer(idPlayer){
+        this.players[idPlayer].score++;
+    }
+
     GetAllPlayers(){
         return this.players;
     }
@@ -242,6 +252,19 @@ class GameState{
 
     GetPlayerWaiting(){
         return this.isPlayerWaiting;
+    }
+
+    GetPlayerId(data){
+        if (data.side != null){
+            for (let id in this.players){
+                console.log('id: ' + JSON.stringify(this.players[id]));
+                console.log('score: ' + this.players[id].score);
+                if (this.players[id].side == data.side){
+                    console.log('id122131: ' + id);
+                    return id;
+                }
+            }
+        }
     }
 
     SetPlayers(players){
@@ -267,6 +290,10 @@ class GameState{
 
     DeletePlayer(idPlayer){
         delete this.players[idPlayer];
+    }
+
+    GetScorePlayer(idPlayer){
+        return this.players[idPlayer].score;
     }
 }
 
@@ -423,9 +450,7 @@ class Game{
 
     Stop(){
         if (this.gameLoop != null) 
-            clearInterval(this.gameLoop);
-        
-        
+            clearInterval(this.gameLoop);        
     }
     
     PlayerMove(replicated){
@@ -441,8 +466,11 @@ class Game{
 
         if (ball == null) return;
 
-        ball.Move(this.size_canvas);
-        
+        let hitSide = ball.Move(this.size_canvas);
+        if (hitSide != -1){
+            console.log('BallMove: ' + hitSide);
+        }
+
         const players = this.myGameState.GetAllPlayers();
         for (let id in players) {
             let player = players[id];
@@ -456,7 +484,7 @@ class Game{
             
         }
 
-        replicated(ball.GetPos());
+        replicated(ball.GetPos(), hitSide);
     }
 
     GetPlayer(idPlayer){
@@ -467,8 +495,8 @@ class Game{
         }   
     }
 
-    SpawnPlayer(size, pos, color, speed, idPlayer, name, score){
-        const newPlayer = new Player(size, pos, color, speed, idPlayer, name, score);
+    SpawnPlayer(size, pos, color, speed, idPlayer, name, score, side){
+        const newPlayer = new Player(size, pos, color, speed, idPlayer, name, score, side);
         this.myGameState.AddPlayer(idPlayer, newPlayer);
 
         return newPlayer;
@@ -483,6 +511,10 @@ class Game{
 
     DeletePlayer(idPlayer){
         this.myGameState.DeletePlayer(idPlayer);
+    }
+
+    GetPlayerId(data){
+        return this.myGameState.GetPlayerId(data);
     }
 
     DeleteBall(){
@@ -591,6 +623,14 @@ class Game{
 
     GetBall(){
         return this.myGameState.GetBall();
+    }
+
+    AddScorePlayer(idPlayer){
+        this.myGameState.AddScorePlayer(idPlayer);
+    }
+
+    GetScorePlayer(idPlayer){
+        return this.myGameState.GetScorePlayer(idPlayer);
     }
 }
 

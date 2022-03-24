@@ -13,40 +13,76 @@
     <title>Web Socket</title>
 </head>
 <body>
-    <div class="container">
+    <!-- background squares -->
+    <div class="area" >
+        <ul class="circles">
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+                <li></li>
+        </ul>
+    </div >
+
+    <!-- background waves -->
+    <div class="waveWrapper waveAnimation">
+        <div class="waveWrapperInner bgTop">
+            <div class="wave waveTop"></div>
+        </div>
+        <div class="waveWrapperInner bgMiddle">
+            <div class="wave waveMiddle"></div>
+        </div>
+        <div class="waveWrapperInner bgBottom">
+            <div class="wave waveBottom"></div>
+        </div>
+    </div>
+
+
+    <div class="container container-background">
         <h1>Pong Socker</h1>
         <input type="text" id="room-name">        
-        <button id="join-room">Join Room</button>
+        <button id="join-room" class="boton-guay">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            Join Room
+        </button>
     </div>
     <!-- formulario -->
-    <form class="settings-container hidden" onsubmit="searchKeyPress(event)">
+    <form class="settings-container hidden container-background" onsubmit="searchKeyPress(event)">
         <fieldset>
             <legend>Nombre de los jugadores</legend>
             <div class="form-container">
                 <label for="name-player1">Player1</label>
-                <input side="0" type="text" id="name-player1">
+                <input side="0" type="text" id="name-player1" value="Player1">
             </div>
             <div class="form-container">
                 <label for="name-player2">Player2</label>
-                <input side="1" type="text" id="name-player2">
+                <input side="1" type="text" id="name-player2" value="Player2">
             </div>
         </fieldset>
         <fieldset>
             <legend>Dificultad</legend>
             <div class="form-container">
                 <label for="player-size">Players Size</label> <!-- Tam Y player -->
-                <input type="range" min="30" max="100" step="5" name="player-size" id="player-size">
-                <input type="number" readonly>
+                <input type="range" min="30" max="100" value="65" step="5" onchange="this.parentNode.children[2].value = this.value" name="player-size" id="player-size">
+                <input type="text" value="65" readonly>
             </div>
             <div class="form-container">
                 <label for="player-speed">Players Speed</label>
-                <input type="range" min="1" max="15" step="1" name="player-speed" id="player-speed">
-                <input type="number" readonly>
+                <input type="range" min="1" max="15" step="1" value="8" onchange="this.parentNode.children[2].value = this.value" name="player-speed" id="player-speed">
+                <input type="text" value="8" readonly>
             </div> 
             <div class="form-container">
                 <label for="ball-speed">Ball Speed</label>
-                <input type="range" min="1" max="15" step="1" name="ball-speed" id="ball-speed">
-                <input type="number" readonly>
+                <input type="range" min="1" max="15" step="1" value="8" onchange="this.parentNode.children[2].value = this.value" name="ball-speed" id="ball-speed">
+                <input type="text" value="8" readonly>
             </div> 
         </fieldset>
         <fieldset>
@@ -54,7 +90,13 @@
             <input type="range" name="sound" id="sound">
         </fieldset>
         <div class="form-container">
-            <input id="start-game" type="button" value="Start">
+            <div class="boton-guay boton-div">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <input value="start" type="button" onclick="searchKeyPress(event)" id="start-game" class="boton-guay">
+            </div>
         </div>  
     </form>
     <canvas id="game" class="hidden"></canvas>
