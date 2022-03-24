@@ -1,6 +1,6 @@
 import {GameState, Display} from './gameClient.js';
+import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
 
-const socket = io();
 const container = document.querySelector('.container');
 const btn = document.querySelectorAll('.btn');
 const canvas = document.querySelector('#game');
@@ -15,8 +15,19 @@ let input = {
 let inside_game = false;
 
 
+const socket = io("https://ping-pong-pm.herokuapp.com/", {
+    withCredentials: true,
+    extraHeaders: {
+      "allow-pm-access": "abcd"
+    }
+  });
+
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
+
+socket.on("connect", () => {
+    console.log(socket.id); // "G5p5..."
+  });
 
 socket.on('join_room_server', (data) => {
     if (data.status != 200) {

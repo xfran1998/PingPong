@@ -9,7 +9,15 @@ const { disable } = require('express/lib/application');
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
-const io = socketio(server);
+const io = socketio(server,
+    {
+        cors: {
+            origin: '*',
+            methods: ["GET", "POST"],
+            allowedHeaders: ["allow-pm-access"],
+            credentials: true
+        }
+    });
 
 // class user{
 //     constructor(name, room) {
