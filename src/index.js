@@ -9,13 +9,7 @@ const { disable } = require('express/lib/application');
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
-const io = socketio(server,
-    {
-        allowRequest: (req, callback) => {
-            const noOriginHeader = req.headers.origin === undefined;
-            callback(null, noOriginHeader);
-          }
-    });
+const io = socketio(server);
 
 // class user{
 //     constructor(name, room) {

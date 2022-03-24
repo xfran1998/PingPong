@@ -15,12 +15,7 @@ let input = {
 let inside_game = false;
 
 
-const socket = io("https://ping-pong-pm.herokuapp.com/", {
-    withCredentials: true,
-    extraHeaders: {
-      "allow-pm-access": "abcd"
-    }
-  });
+const socket = io("https://ping-pong-pm.herokuapp.com:32399");
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
