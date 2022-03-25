@@ -1,4 +1,4 @@
-import {GameState, Display} from './gameClient.js';
+import {GameState, Display, GameMode} from './gameClient.js';
 
 const socket = io();
 const container = document.querySelector('.container');
@@ -6,6 +6,7 @@ const btn = document.querySelectorAll('.btn');
 const canvas = document.querySelector('#game');
 const context = canvas.getContext('2d');
 const settings_container = document.querySelector('.settings-container');
+const finish = document.querySelector('.finish');
 
 let input = {
     type: false,
@@ -18,6 +19,15 @@ let inside_game = false;
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
 
+Display.SetDisplays({
+    0: container,
+    1: settings_container,
+    2: settings_container,
+    3: canvas,
+    4: container,
+});
+
+
 socket.on('join_room_server', (data) => {
     if (data.status != 200) {
         alert(data.response);
@@ -29,7 +39,7 @@ socket.on('join_room_server', (data) => {
     inside_game = true;
     // DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
     SetCanvas(data.response.room_players , data.response.TAM_GAME, socket.id);
-    DisplayMenu();
+    // Display.ChangeDisplay(data.response.game_state);
 });
 
 
@@ -55,23 +65,28 @@ socket.on('waiting_player_server', (data) => {
     DisableAllInputs(data.input_disable, data.submit_text);
 });
 
-socket.on('start_playing_server', () => {
-    DisplayCanvas();
-});
+// socket.on('start_playing_server', () => {
+//     DisplayCanvas();
+// });
 
 socket.on('update_score_server', (data) => {
     Display.myGameState.SetPlayerScore(data.player_id, data.score);
     console.log('SCORE:' + data.player_id + ' - ' + data.score);
 });
 
-function SetCanvas(room_players, TAM_GAME, socked_id){
+socket.on('change_game_state_server', (data) => {
+    Display.ChangeDisplay(data.gameState);//LAST
+});
+
+function SetCanvas(room_players, TAM_GAME, socked_id, GAME_MODE){
     canvas.width = TAM_GAME.width;
     canvas.height = TAM_GAME.height;
 
     Display.SetContext(context);
     Display.SetGameState(new GameState());
-    Display.SetPlayers(room_players, socked_id)
-    Display.Draw();
+    Display.SetPlayers(room_players, socked_id);
+    Display.SetGameMode(GAME_MODE);
+    // Display.Draw();
 }
 
 function DisplayCanvas(){
@@ -137,6 +152,12 @@ $('#join-room').addEventListener('click', () => {
 
 $('#start-game').addEventListener('click', () => {
     getDataForm();
+});
+
+$('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    console.log('prevented');
+    return false;
 });
 
 function searchKeyPress(e) {

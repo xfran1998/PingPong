@@ -1,6 +1,8 @@
 class Display{
     static context = null;
     static myGameState = null;
+    static myGameMode = null;
+    static displaysGameplay = {}
 
     static Draw(){
         if (!this.context || !this.myGameState) return // Prevents fail
@@ -29,6 +31,10 @@ class Display{
         this.myGameState = myGameState;
     }
 
+    static SetGameMode(GAME_MODE){
+        this.myGameMode = GAME_MODE;
+    }
+
     // roomPlayers = rooms[room_id]['players'] array
     static SetPlayers(roomPlayers, socked_id){
         this.myGameState.SetPlayers(roomPlayers, socked_id);
@@ -40,6 +46,44 @@ class Display{
         this.context.fillStyle = player.color;           
         this.context.fill(); 
         this.context.closePath();
+    }
+
+    static SetDisplays(displays){
+        this.displaysGameplay = displays;
+    }   
+
+    static ChangeDisplay(game_mode){
+        this.myGameMode = game_mode;
+        
+        console.log('game_mode: ', game_mode);
+        console.log('displaysGameplay: ', this.displaysGameplay);
+        // game_mode = {MENU:0} or {WAITING:1} or {PLAYING:2} or {FINISH:3} or {END:4}
+        // this.displaysGameplay = {MENU:div_menu] or {WAITING:div_waiting] or {PLAYING:div_playing] or {FINISH:div_finish] or {END:div_end]
+
+        // change display based on game_mode using loops
+        for (let key in this.displaysGameplay) {
+            if (key == game_mode) {
+                console.log('restore: ', this.displaysGameplay[key]);
+                this.displaysGameplay[key].classList.remove('hidden');
+            } else {
+                if(key == 1 && game_mode == 2) continue;
+                if (key == 2 && game_mode == 1) continue;
+                console.log('add: ', this.displaysGameplay[key]);
+                this.displaysGameplay[key].classList.add('hidden');
+            }
+        }
+
+        if (this.myGameMode == 3) { // Start Game Draw
+            this.Draw();
+        }
+
+        // for (let id in this.displaysGameplay) {
+        //     if (id == game_mode) {
+        //         this.displaysGameplay[id].display.classList.remove('hidden');
+        //     } else {
+        //         this.displaysGameplay[id].display.classList.add('hidden');
+        //     }
+        // }
     }
 
     static DrawBall(){
@@ -64,20 +108,7 @@ class Display{
         let pos = [20,20];
         let tamBorder = [200, 30];
         let tamHealth = [player.health, 30];
-        let stroke = 3;
-
-        // // Player green health
-        // this.context.beginPath();
-        // this.context.rect(pos.x, pos.y, tamHealth[0], tamHealth[1]);
-        // this.context.fillStyle = "green";           
-        // this.context.fill(); 
-        
-        // // Border of the player health
-        // this.context.beginPath();
-        // this.context.rect(pos.x, pos.y, tamBorder[0], tamBorder[1]);
-        // this.context.lineWidth = stroke;
-        // this.context.strokeStyle = 'black';
-        // this.context.stroke();        
+        let stroke = 3;     
     }
 }
 
@@ -142,4 +173,57 @@ class GameState{
     }
 }
 
-export { GameState, Display };
+class GameMode{
+    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, FINISH_GAME: 3, END: 4};
+    static GAME_TYPE = {CLASIC: 0, RAMBLE: 1}; // Ramble: habilities or random changes
+    static GAME_MODALITY = {SINGLE: 0, MULTI: 1}; // Single: one player (we will need a basic AI), Multi: multiplayer
+    
+    constructor(){
+        this.myGameState = GameMode.GAME_STATE.MENU;
+        this.myGameType = GameMode.GAME_TYPE.CLASIC;
+        this.myGameModality = GameMode.GAME_MODALITY.MULTI;
+        this.myBehaviour = null;
+        this.isBeheavurSet = false;
+    }
+
+    UpdateState(state){
+        this.myGameState = state;
+    }
+
+    UpdateType(type){
+        this.myGameType = type;
+    }
+
+    UpdateModality(modality){
+        this.myGameModality = modality;
+    }
+
+    GetGameState(){
+        return this.myGameState;
+    }
+
+    GetGameType(){
+        return this.myGameType;
+    }
+
+    GetGameModality(){
+        return this.myGameModality;
+    }
+
+    SetBeheavur(beheavur){
+        if (!this.myBehaviour){
+            this.myBehaviour = beheavur;
+            this.isBeheavurSet = true;
+        }
+    }
+
+    GetBeheavur(){
+        return this.myBehaviour;
+    }
+
+    IsBeheavurSet(){
+        return this.isBeheavurSet;
+    }
+}
+
+export { GameState, Display, GameMode };

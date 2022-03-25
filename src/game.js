@@ -188,8 +188,7 @@ class Ball extends Pawn{
         let hitSide = -1;
 
         if (hit_borders.x_axis){
-            console.log('direction: ' + JSON.stringify(this.direction));
-            hitSide = (this.direction.x == 1) ? 1 : 0;
+            hitSide = (this.direction.x > 0) ? 1 : 0;
             this.direction.x *= -1;
         }
         if (hit_borders.y_axis){
@@ -257,10 +256,9 @@ class GameState{
     GetPlayerId(data){
         if (data.side != null){
             for (let id in this.players){
-                console.log('id: ' + JSON.stringify(this.players[id]));
+                // console.log('id: ' + JSON.stringify(this.players[id]));
                 console.log('score: ' + this.players[id].score);
                 if (this.players[id].side == data.side){
-                    console.log('id122131: ' + id);
                     return id;
                 }
             }
@@ -298,7 +296,7 @@ class GameState{
 }
 
 class GameMode{
-    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, FINISH_GAME: 3, END: 4};
+    static GAME_STATE = {INIT: 0, MENU: 1, WAITING_PLAYERS: 2, PLAYING: 3, FINISH_GAME: 4};
     static GAME_TYPE = {CLASIC: 0, RAMBLE: 1}; // Ramble: habilities or random changes
     static GAME_MODALITY = {SINGLE: 0, MULTI: 1}; // Single: one player (we will need a basic AI), Multi: multiplayer
     
@@ -444,13 +442,20 @@ class Game{
             await this.WaitFinish();
         }
 
-        if (state != GameMode.GAME_STATE.END) // if gameLoop is not null then change state when the previous one is finished
+        if (state != GameMode.GAME_STATE.INIT) // if gameLoop is not null then change state when the previous one is finished
             this.ChangeState();
     }
 
-    Stop(){
+    Stop(restart_players){
         if (this.gameLoop != null) 
-            clearInterval(this.gameLoop);        
+            clearInterval(this.gameLoop);   
+            
+        setTimeout(() => {
+            if (this.gameLoop == null) {
+                restart_players();
+                console.log('Game restarted');
+            }
+        }, 10000);
     }
     
     PlayerMove(replicated){
@@ -548,6 +553,10 @@ class Game{
 
     GetGameState(){
         return this.myGameState;
+    }
+
+    GetGameMode(){
+        return this.myGameMode;
     }
 
     // Debug funcs

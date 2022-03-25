@@ -58,12 +58,24 @@ io.on('connection', (socket) => {
 
         // delete user from game
         rooms[room_name].game.DeletePlayer(socket.id);
+        rooms[room_name].game.Stop(
+            // check if room exists
+            () => {
+                // check if room room exists
+                console.log('STOP');
+                if (!rooms[room_name]) return
+                console.log('room exist');
 
-        // check if room is empty
-        if (rooms[room_name].players.length == 0) {   
-            rooms[room_name].game.Stop();
-            delete rooms[room_name];
-        }
+                if (rooms[room_name].players.length == 0) {   
+                    delete rooms[room_name];
+                    console.log('game deleted');
+                    return;
+                }
+
+                io.to(room_name).emit('change_game_state_server', {
+                    gameState: rooms[room_name].game.GetGameMode().GetGameState()
+                });
+            });
     });   
     
     socket.on('join_room_client', (data) => {
@@ -130,17 +142,22 @@ io.on('connection', (socket) => {
         }};
         
         io.to(room_id).emit('join_room_server', response);
+        socket.emit('change_game_state_server', { //LAST
+            gameState: myGame.GetGameMode().GetGameState()
+        });
         
         // start the game if room is full
         if (rooms[room_id]['players'].length == 2){
             io.to(room_id).emit('set_ball_server', {
                 ball: myGame.GetBall(),
             });
+            myGame.Run(); //start game
+            // io.to(room_id).emit('start_game_server');            
+            socket.broadcast.to(room_id).emit('change_game_state_server', {
+                gameState: myGame.GetGameMode().GetGameState()
+            });            
 
-            io.to(room_id).emit('start_game_server');
-            
-            //start game
-            }
+        }
                     
         // if (rooms[room_id] && rooms[room_id].length == 2){
         //     const emit_server = (room) => {
@@ -176,9 +193,10 @@ io.on('connection', (socket) => {
         if (!players[socket.id]) return;
         
         // check if room exist
-        if (!rooms[players[socket.id].room]) return;
+        room_name = players[socket.id].room;
+        if (!rooms[room_name]) return;
         
-        let myGame = rooms[players[socket.id].room].game;
+        let myGame = rooms[room_name].game;
 
         
         if (!myGame.GetIsPlayerWaiting()){
@@ -186,7 +204,7 @@ io.on('connection', (socket) => {
             myGame.SetGameMode(GameMode.GAME_STATE.WAITING_PLAYERS);
         }
         
-        socket.broadcast.to(players[socket.id].room).emit('waiting_player_server', {
+        socket.broadcast.to(room_name).emit('waiting_player_server', {
             input_disable: true,
             submit_text: 'Ready',
         });
@@ -197,8 +215,10 @@ io.on('connection', (socket) => {
         });
         
         if (myGame.SetPlayerWaiting(true)){
-            io.to(players[socket.id].room).emit('start_playing_server');
             myGame.SetGameMode(GameMode.GAME_STATE.PLAYING);
+            io.to(room_name).emit('change_game_state_server', {
+                gameState: rooms[room_name].game.GetGameMode().GetGameState()
+            });
             
         }
         
@@ -228,7 +248,6 @@ io.on('connection', (socket) => {
 })
 
 function StartRoom(myGame){
-    myGame.Run();
     SetGameBeheavur(myGame);
 }
 
@@ -251,9 +270,7 @@ function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, THE GA
                     });
 
                     if (hitSide != -1){
-                        console.log('side: ' + (1-hitSide));
                         let player_id = myGame.GetPlayerId({side: 1-hitSide}); // Get the player id of the player that hit the ball
-                        console.log('id: ' + player_id);
 
                         myGame.AddScorePlayer(player_id);
 
