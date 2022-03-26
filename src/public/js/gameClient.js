@@ -52,6 +52,23 @@ class Display{
         this.displaysGameplay = displays;
     }   
 
+    static DisableAllInputs(submit_text='Waiting'){
+        $$('input').forEach(input => {
+            input.classList.add('input-disabled');
+        });
+    
+        if (submit_text == 'Ready') // Only enable for player who is not ready
+            $('#start-game').classList.remove('input-disabled');
+    
+        $('#start-game').value = submit_text;
+    }
+
+    static EnableAllInputs(){
+        $$('input').forEach(input => {
+            input.classList.remove('input-disabled');
+        });
+    }
+    
     static ChangeDisplay(game_mode){
         this.myGameMode = game_mode;
         
@@ -64,6 +81,9 @@ class Display{
         for (let key in this.displaysGameplay) {
             if (key == game_mode) {
                 console.log('restore: ', this.displaysGameplay[key]);
+                if (key == 1) {
+
+                }
                 this.displaysGameplay[key].classList.remove('hidden');
             } else {
                 if(key == 1 && game_mode == 2) continue;

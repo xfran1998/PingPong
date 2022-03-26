@@ -62,7 +62,7 @@ socket.on('update_ball_pos_server', (info) => {
 
 socket.on('waiting_player_server', (data) => {
     // console.log('disable inputs: ' + data.input_disable);
-    DisableAllInputs(data.input_disable, data.submit_text);
+    // DisableAllInputs(data.input_disable, data.submit_text);
 });
 
 // socket.on('start_playing_server', () => {
@@ -181,16 +181,16 @@ function getDataForm(){
     SetRoomMenu(data);
 }
 
-function DisableAllInputs(disable, submit_text){
-    $$('input').forEach(input => {
-        if(disable)
-            input.classList.add('input-disabled');
-        else
-            input.classList.remove('input-disabled');
-    });
+// function DisableAllInputs(disable, submit_text){
+//     $$('input').forEach(input => {
+//         if(disable)
+//             input.classList.add('input-disabled');
+//         else
+//             input.classList.remove('input-disabled');
+//     });
 
-    if (submit_text == 'Ready') // Only enable for player who is not ready
-        $('#start-game').classList.remove('input-disabled');
+//     if (submit_text == 'Ready') // Only enable for player who is not ready
+//         $('#start-game').classList.remove('input-disabled');
 
-    $('#start-game').value = submit_text;
-}
+//     $('#start-game').value = submit_text;
+// }
