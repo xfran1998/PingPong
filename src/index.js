@@ -128,7 +128,6 @@ io.on('connection', (socket) => {
             room: room_id,
         };
         
-        
         socket.join(room_id);
         
         // socket.broadcast.to(room_id).emit('server', 'New Player Joined: ' + socket.id);
@@ -142,7 +141,15 @@ io.on('connection', (socket) => {
         }};
         
         io.to(room_id).emit('join_room_server', response);
-        socket.emit('change_game_state_server', { //LAST
+
+        // TODO: Change this to it in another way, maybe send this in change game state
+        if (myGame.GetGameMode().GetGameState() == GameMode.GAME_STATE.WAITING_PLAYERS){
+            socket.emit('waiting_player_server', {
+                submit_text: 'Ready',
+            });
+        }
+
+        socket.emit('change_game_state_server', { 
             gameState: myGame.GetGameMode().GetGameState()
         });
         
@@ -156,7 +163,6 @@ io.on('connection', (socket) => {
             socket.broadcast.to(room_id).emit('change_game_state_server', {
                 gameState: myGame.GetGameMode().GetGameState()
             });            
-
         }
                     
         // if (rooms[room_id] && rooms[room_id].length == 2){
@@ -203,16 +209,20 @@ io.on('connection', (socket) => {
             myGame.ChangeGameSetting(gameSettings);
             myGame.SetGameMode(GameMode.GAME_STATE.WAITING_PLAYERS);
         }
+
         
+        // io.to(room).emit('waiting_player_server');
+
+
         socket.broadcast.to(room_name).emit('waiting_player_server', {
-            input_disable: true,
             submit_text: 'Ready',
         });
         
         socket.emit('waiting_player_server', {
-            input_disable: true,
             submit_text: 'Waiting Player',
         });
+
+        console.log('set_room_menu_server');
         
         if (myGame.SetPlayerWaiting(true)){
             myGame.SetGameMode(GameMode.GAME_STATE.PLAYING);

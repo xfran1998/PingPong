@@ -248,11 +248,7 @@ class GameState{
     GetBall(){
         return this.ball;
     }
-
-    GetPlayerWaiting(){
-        return this.isPlayerWaiting;
-    }
-
+    
     GetPlayerId(data){
         if (data.side != null){
             for (let id in this.players){
@@ -527,7 +523,10 @@ class Game{
     }
     
     SetPlayerWaiting(isWaiting){ // return true if the player is already waiting, so go to play state
-        if (this.myGameState.isWaiting && isWaiting) return true;
+        if (this.myGameState.isWaiting && isWaiting){
+            // this.myGameState.isWaiting = false; // The game is just started so no player is waiting anymore
+            return true;  
+        } 
 
         this.myGameState.isWaiting = isWaiting;
         return false;

@@ -15,7 +15,7 @@ let input = {
 let inside_game = false;
 
 
-const socket = io("https://ping-pong-pm.herokuapp.com:32399");
+const socket = io("ws://ping-pong-pm.herokuapp.com:32399");
 
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
@@ -57,13 +57,13 @@ socket.on('update_ball_pos_server', (info) => {
 });
 
 socket.on('waiting_player_server', (data) => {
-    console.log('disable inputs: ' + data.input_disable);
-    DisableAllInputs(data.input_disable, data.submit_text);
+    console.log('waiting_player_server');
+    Display.DisableAllInputs(data.submit_text);
 });
 
-socket.on('start_playing_server', () => {
-    DisplayCanvas();
-});
+// socket.on('start_playing_server', () => {
+//     DisplayCanvas();
+// });
 
 function SetCanvas(room_players, TAM_GAME, socked_id){
     canvas.width = TAM_GAME.width;

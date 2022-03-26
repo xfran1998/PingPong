@@ -39,7 +39,9 @@ socket.on('join_room_server', (data) => {
     inside_game = true;
     // DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);
     SetCanvas(data.response.room_players , data.response.TAM_GAME, socket.id);
-    // Display.ChangeDisplay(data.response.game_state);
+    if (data.response.is_waiting){
+        Display.DisableAllInputs('Ready');
+    }
 });
 
 
@@ -61,8 +63,8 @@ socket.on('update_ball_pos_server', (info) => {
 });
 
 socket.on('waiting_player_server', (data) => {
-    // console.log('disable inputs: ' + data.input_disable);
-    // DisableAllInputs(data.input_disable, data.submit_text);
+    console.log('waiting_player_server');
+    Display.DisableAllInputs(data.submit_text);
 });
 
 // socket.on('start_playing_server', () => {
@@ -75,7 +77,7 @@ socket.on('update_score_server', (data) => {
 });
 
 socket.on('change_game_state_server', (data) => {
-    Display.ChangeDisplay(data.gameState);//LAST
+    Display.ChangeDisplay(data.gameState);
 });
 
 function SetCanvas(room_players, TAM_GAME, socked_id, GAME_MODE){

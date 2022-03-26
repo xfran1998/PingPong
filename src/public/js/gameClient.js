@@ -1,3 +1,6 @@
+const $ = selector => document.querySelector(selector);
+const $$ = selector => document.querySelectorAll(selector);
+
 class Display{
     static context = null;
     static myGameState = null;
@@ -53,6 +56,7 @@ class Display{
     }   
 
     static DisableAllInputs(submit_text='Waiting'){
+        console.log('inputs: ', $$('input'));
         $$('input').forEach(input => {
             input.classList.add('input-disabled');
         });
@@ -76,14 +80,14 @@ class Display{
         console.log('displaysGameplay: ', this.displaysGameplay);
         // game_mode = {MENU:0} or {WAITING:1} or {PLAYING:2} or {FINISH:3} or {END:4}
         // this.displaysGameplay = {MENU:div_menu] or {WAITING:div_waiting] or {PLAYING:div_playing] or {FINISH:div_finish] or {END:div_end]
-
+        
         // change display based on game_mode using loops
         for (let key in this.displaysGameplay) {
             if (key == game_mode) {
                 console.log('restore: ', this.displaysGameplay[key]);
-                if (key == 1) {
-
-                }
+                // if (key == 1) {
+                    
+                // }
                 this.displaysGameplay[key].classList.remove('hidden');
             } else {
                 if(key == 1 && game_mode == 2) continue;
