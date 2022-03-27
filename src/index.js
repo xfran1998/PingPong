@@ -229,9 +229,7 @@ io.on('connection', (socket) => {
             io.to(room_name).emit('change_game_state_server', {
                 gameState: rooms[room_name].game.GetGameMode().GetGameState()
             });
-            
         }
-        
     });
 
 
@@ -261,7 +259,7 @@ function StartRoom(myGame){
     SetGameBeheavur(myGame);
 }
 
-function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, THE GAME SHOULD STOP
+async function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, THE GAME SHOULD STOP
     if (!myGame.IsBeheavurSet()){ // if beheavur is not set, set it
         myGame.SetPlayingBeheavur((game) => {
             game.PlayerMove(
@@ -273,25 +271,77 @@ function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, THE GA
                     });
                 }), // Move the player (key pressed)
             game.BallMove(
-                (ballPos, hitSide) => {
+                (ballPos) => {
                     // console.log(`Move Ball`);
                     io.to(myGame.GetRoomId()).emit('update_ball_pos_server', {
                         ballPos: ballPos
                     });
 
-                    if (hitSide != -1){
+                }) // Move the ball
+            game.CheckCollision( 
+                async (hitSide) => {
+                    let waitBallGrowing = false;
+                    let ball;
+                    let original_size;
+                    let original_speed;
+
+
+                    if (hitSide != -1){ // Ball hits the left/right borders of the field, so one player scores
+                        // console.log('Ball hit: ', hitSide);
+                        waitBallGrowing = true;
                         let player_id = myGame.GetPlayerId({side: 1-hitSide}); // Get the player id of the player that hit the ball
-
+                        
                         myGame.AddScorePlayer(player_id);
+                        
+                        // TODO: Move the ball to the center, change the size to 0 and the velocity to 0 |  CHECKED
+                        ball = myGame.GetBall();
+                        original_size = ball.size.width;
+                        original_speed = ball.speed;
 
+                        let size_canvas = myGame.GetCanvasSize();
+                        
+                        ball.size.width = 0;
+                        ball.speed = 0;
+                        
+                        ball.pos.x = size_canvas.width/2;
+                        ball.pos.y = size_canvas.height/2;
+                        
                         io.to(myGame.GetRoomId()).emit('update_score_server', {
                             player_id: player_id,
                             score: myGame.GetScorePlayer(player_id)
                         });
+                    }     
+                    if (waitBallGrowing){
+                        // TODO: Change gradually the size of the ball from 0 to his original size in a certain time
+                        await WaitGrowing(myGame, ball, original_size);
+                        // TODO: When that certain time is over, change velocity to aim the field player who scored (1-hitSide)
+                        ball.speed = original_speed;
                     }
-                }) // Move the ball
+                        
+                    
+                });
             });
         }
+}
+
+async function WaitGrowing(myGame, ball, original_size){
+    let size_time_interval = 2000; 
+    return new Promise((resolve, reject) => {
+        let gameFrec = myGame.gameFrec;
+        let growInterval = setInterval(() => {
+            ball.size.width += original_size * (gameFrec/size_time_interval);
+
+            io.to(myGame.GetRoomId()).emit('update_ball_size_server', {
+                ballSize: ball.size
+            });
+        }, gameFrec);
+        
+        setTimeout(() => {
+            clearInterval(growInterval);
+            ball.size.width = original_size;
+            resolve();
+        }, size_time_interval);
+    });
 }
 
 server.listen(PORT, () => {console.log(`runing on port ${PORT}`);});

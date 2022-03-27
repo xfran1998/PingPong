@@ -227,6 +227,7 @@ class GameState{
         this.ball = null;
         this.isPlayerWaiting = false;
         this.room_id;
+        this.hitSide = -1;
     }
 
     AddPlayer(idPlayer, newPlayer){
@@ -454,11 +455,12 @@ class Game{
         }, 10000);
     }
     
+    // Playing behavior callbacks
     PlayerMove(replicated){
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
             if (players[id].Move(this.size_canvas))
-                replicated(players[id].GetPos(), id);
+                replicated(players[id].GetPos(), id); // Handle emiting the message to the clients (Socket.io)
         }
     }
     
@@ -467,10 +469,7 @@ class Game{
 
         if (ball == null) return;
 
-        let hitSide = ball.Move(this.size_canvas);
-        if (hitSide != -1){
-            console.log('BallMove: ' + hitSide);
-        }
+        this.myGameState.hitSide = ball.Move(this.size_canvas);
 
         const players = this.myGameState.GetAllPlayers();
         for (let id in players) {
@@ -481,11 +480,14 @@ class Game{
                 // get the vector Player------>Ball
                 let col_dir = GMath.GetVector(player.pos, ball.pos);
                 ball.direction = GMath.NormalizeVector(col_dir, false);
-            }
-            
+            }    
         }
 
-        replicated(ball.GetPos(), hitSide);
+        replicated(ball.GetPos()); // Handle emiting the message to the clients (Socket.io)
+    }
+
+    async CheckCollision(replicated){
+        replicated(this.myGameState.hitSide);
     }
 
     GetPlayer(idPlayer){
@@ -494,6 +496,10 @@ class Game{
             if (id == idPlayer)
                 return players[id];
         }   
+    }
+
+    GetBall(){
+        return this.myGameState.GetBall();
     }
 
     SpawnPlayer(size, pos, color, speed, idPlayer, name, score, side){
@@ -550,6 +556,10 @@ class Game{
             players[input.idPlayer].KeyReleassed(input.key); // if it's delete the key
     }
 
+    GetCanvasSize(){
+        return this.size_canvas;
+    }
+
     GetGameState(){
         return this.myGameState;
     }
@@ -577,6 +587,11 @@ class Game{
         }
 
         return dirPlayers;
+    }
+
+    GetBallSize(){
+        let ball = this.myGameState.GetBall();
+        return ball.size;
     }
 
     // Server info to client
@@ -609,7 +624,7 @@ class Game{
         ball.speed = gameSettings.b_speed;
     }
 
-    SetPlayingBeheavur(behaviour){
+    async SetPlayingBeheavur(behaviour){
         this.myGameMode.SetBeheavur(behaviour); // player and ball beheavur
     }
 

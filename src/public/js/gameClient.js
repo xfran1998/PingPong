@@ -195,6 +195,10 @@ class GameState{
     SetPlayerPos(id, pos){
         this.players[id].player.pos = pos;
     }
+
+    SetBallSize(size){
+        this.ball.size = size;
+    }
 }
 
 class GameMode{

@@ -67,9 +67,10 @@ socket.on('waiting_player_server', (data) => {
     Display.DisableAllInputs(data.submit_text);
 });
 
-// socket.on('start_playing_server', () => {
-//     DisplayCanvas();
-// });
+socket.on('update_ball_size_server', (data) => {
+    console.log(data.ballSize);
+    Display.myGameState.SetBallSize(data.ballSize);
+});
 
 socket.on('update_score_server', (data) => {
     Display.myGameState.SetPlayerScore(data.player_id, data.score);
