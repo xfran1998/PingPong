@@ -2,6 +2,10 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
 
 class Display{
+    static paddingMiddle = 20;
+    static font_size = 24;
+    
+    static canvas_size;
     static context = null;
     static myGameState = null;
     static myGameMode = null;
@@ -19,7 +23,10 @@ class Display{
             Display.DrawPlayer(players[id].player);
         }
 
+        Display.DrawMiddleLine();
         Display.DrawBall();
+        Display.DrawNames();
+        Display.DrawScore();
         // let player = myGame.myGameState.players[0];
         // Display.DrawHealthBar(player, this.context);
 
@@ -28,6 +35,10 @@ class Display{
 
     static SetContext(context){
         this.context = context;
+    }
+
+    static SetTamBoard(canvas_size){
+        this.canvas_size = canvas_size;
     }
 
     static SetGameState(myGameState){
@@ -42,12 +53,14 @@ class Display{
     static SetPlayers(roomPlayers, socked_id){
         this.myGameState.SetPlayers(roomPlayers, socked_id);
     }
-
+    
     static DrawPlayer(player){
         this.context.beginPath();
+        this.context.setLineDash([]);
         this.context.rect(player.pos.x - player.size.width/2, player.pos.y - player.size.height/2, player.size.width, player.size.height);
         this.context.fillStyle = player.color;           
         this.context.fill(); 
+        this.context.stroke();
         this.context.closePath();
     }
 
@@ -110,6 +123,15 @@ class Display{
         // }
     }
 
+    static DrawMiddleLine(){
+        this.context.moveTo(this.context.canvas.width/2, 0);
+        this.context.strokeStyle = '#555';
+        this.context.lineWidth=3;
+        this.context.setLineDash([15, 10]);
+        this.context.lineTo(this.context.canvas.width/2, this.context.canvas.height);
+        this.context.stroke();
+    }
+
     static DrawBall(){
         let ball = this.myGameState.GetBall();
         if (!ball) return;
@@ -119,6 +141,91 @@ class Display{
         this.context.fillStyle = ball.color;
         this.context.fill();
         this.context.closePath();
+    }
+
+    static DrawNames(){
+        let count = 0;
+        for(let id in this.myGameState.players){
+        //     let name_player = this.myGameState.players[id].player.name;
+        //     let coords;
+        //     this.context.font = `${this.font_size}px Arial`;
+        //     this.context.fillStyle = '#eee';
+
+        //     if (count == 0) {
+        //         let size_name = this.context.measureText(name_player);
+        //         coords = [this.canvas_size.width/2 - (size_name.width+this.paddingMiddle), this.paddingMiddle+this.font_size/2];
+        //     }
+        //     else{
+        //         coords = [this.canvas_size.width/2 + this.paddingMiddle, this.paddingMiddle+this.font_size/2];
+        //     }
+            
+        //     count++;
+        //     this.context.fillText(name_player, coords[0], coords[1]);
+            this.DrawText(this.myGameState.players[id].player.name, this.font_size,  '#eee', (count == 0));
+            count++;
+        }
+
+    }
+
+    static DrawScore(){
+        let count = 0;
+        for(let id in this.myGameState.players){
+            // let name_player = this.myGameState.players[id].player.name;
+            // let coords;
+            // this.context.font = `${this.font_size/2}px Arial`;
+            // this.context.fillStyle = '#fff';
+            // let size_name = this.context.measureText(name_player);
+
+            // if (count == 0) {
+            //     coords = [this.canvas_size.width/2 - (size_name.width/2+this.paddingMiddle), this.paddingMiddle+this.font_size/2];
+            // }
+            // else{
+            //     coords = [this.canvas_size.width/2 + this.paddingMiddle + size_name.width/2, this.paddingMiddle+this.font_size/2];
+            // }
+            
+            // this.context.fillText(name_player, coords[0], coords[1]);
+            this.DrawText(this.myGameState.players[id].player.name, this.font_size/2,  '#fff', (count == 0), this.myGameState.players[id].player.score);
+            count++;
+        }
+    }
+
+    static DrawText(name_player, font_size, text_color, is_left, score=null){   
+        let coords;
+        this.context.fillStyle = text_color;
+        
+        if (score != null) { // 0 null (score)
+            this.context.font = `${font_size*2}px Arial`;
+        }
+        else{
+            this.context.font = `${font_size}px Arial`;
+        }
+        
+        let size_name = this.context.measureText(name_player);
+        if (score != null) {
+            this.context.font = `${font_size}px Arial`;
+        }
+
+        if (score == null) // players names
+            if (is_left) {
+                coords = [this.canvas_size.width/2 - (size_name.width+this.paddingMiddle), this.paddingMiddle+this.font_size];
+            }
+            else{
+                coords = [this.canvas_size.width/2 + this.paddingMiddle, this.paddingMiddle+this.font_size];
+            }
+        else
+            if (is_left) {
+                coords = [this.canvas_size.width/2 - (size_name.width/2+this.paddingMiddle), this.paddingMiddle+this.font_size*2];
+            }
+            else{
+                coords = [this.canvas_size.width/2 + this.paddingMiddle + size_name.width/2, this.paddingMiddle+this.font_size*2];
+            }
+
+        if (score != null) {
+            this.context.fillText(score, coords[0], coords[1]);
+        }
+        else{
+            this.context.fillText(name_player, coords[0], coords[1]);
+        }
     }
 
     static ClearScreen(){
@@ -148,6 +255,8 @@ class GameState{
         
         this.players = {};
         roomPlayers.forEach(playerSettings => {
+            console.log('playerSettings');
+            console.log(playerSettings.player);
             this.players[playerSettings.player.id] = {
                 player: playerSettings.player,
                 side: playerSettings.side,
@@ -166,6 +275,19 @@ class GameState{
 
     SetPlayerScore(id, score){
         this.players[id].player.score = score;
+    }
+
+    SetAllPlayers(players){
+        console.log('players');
+        console.log(players);
+        console.log('this.players');
+        console.log(this.players);
+        
+        for (let id in players){
+            this.players[id].player = players[id];
+        }
+        console.log('this.players');
+        console.log(this.players);
     }
 
     GetPlayers(){

@@ -29,10 +29,13 @@ Display.SetDisplays({
 
 
 socket.on('join_room_server', (data) => {
+    console.log('join_room_server');
     if (data.status != 200) {
         alert(data.response);
         return;
     }
+
+    console.log(data.response);
 
     // console.log(data.response);
     // console.log(socket.id);
@@ -42,6 +45,8 @@ socket.on('join_room_server', (data) => {
     if (data.response.is_waiting){
         Display.DisableAllInputs('Ready');
     }
+
+    Display.SetTamBoard(data.response.TAM_GAME);
 });
 
 
@@ -63,12 +68,10 @@ socket.on('update_ball_pos_server', (info) => {
 });
 
 socket.on('waiting_player_server', (data) => {
-    console.log('waiting_player_server');
     Display.DisableAllInputs(data.submit_text);
 });
 
 socket.on('update_ball_size_server', (data) => {
-    console.log(data.ballSize);
     Display.myGameState.SetBallSize(data.ballSize);
 });
 
@@ -79,6 +82,10 @@ socket.on('update_score_server', (data) => {
 
 socket.on('change_game_state_server', (data) => {
     Display.ChangeDisplay(data.gameState);
+});
+
+socket.on('change_player_settings_server', (data) => {
+    Display.myGameState.SetAllPlayers(data.players);
 });
 
 function SetCanvas(room_players, TAM_GAME, socked_id, GAME_MODE){
@@ -149,9 +156,10 @@ $('#join-room').addEventListener('click', () => {
     }
     
     socket.emit('join_room_client', {
-        room_id: room, 
+        room_id: room,
     });
 });
+
 
 $('#start-game').addEventListener('click', () => {
     getDataForm();

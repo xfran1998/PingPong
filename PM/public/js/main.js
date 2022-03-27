@@ -25,12 +25,13 @@ socket.on("connect", () => {
   });
 
 socket.on('join_room_server', (data) => {
+    console.log('join_room_server');
     if (data.status != 200) {
         alert(data.response);
         return;
     }
 
-    // console.log(data.response);
+    console.log(data.response);
     // console.log(socket.id);
     inside_game = true;
     // DisplayCanvas(data.response.room , data.response.TAM_GAME, socket.id);

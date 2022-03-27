@@ -490,6 +490,10 @@ class Game{
         replicated(this.myGameState.hitSide);
     }
 
+    GetAllPlayers(){
+        return this.myGameState.GetAllPlayers();
+    }
+
     GetPlayer(idPlayer){
         let players = this.myGameState.GetAllPlayers();
         for (let id in players) {
@@ -613,7 +617,8 @@ class Game{
                 players[id].name = gameSettings.n_player1;
             else
                 players[id].name = gameSettings.n_player2;
-
+            
+            players[id].size.height = gameSettings.p_size;
             players[id].speed = gameSettings.p_speed;
             cont++;
         }
@@ -622,6 +627,8 @@ class Game{
         let ball = this.myGameState.GetBall();
 
         ball.speed = gameSettings.b_speed;
+
+        return players;
     }
 
     async SetPlayingBeheavur(behaviour){

@@ -140,7 +140,9 @@ io.on('connection', (socket) => {
             TAM_GAME: TAM_GAME
         }};
         
+        console.log(room_id);
         io.to(room_id).emit('join_room_server', response);
+        console.log('join_room_server');
 
         // TODO: Change this to it in another way, maybe send this in change game state
         if (myGame.GetGameMode().GetGameState() == GameMode.GAME_STATE.WAITING_PLAYERS){
@@ -226,6 +228,9 @@ io.on('connection', (socket) => {
         
         if (myGame.SetPlayerWaiting(true)){
             myGame.SetGameMode(GameMode.GAME_STATE.PLAYING);
+            io.to(room_name).emit('change_player_settings_server', {
+                players: myGame.GetAllPlayers(),
+            });
             io.to(room_name).emit('change_game_state_server', {
                 gameState: rooms[room_name].game.GetGameMode().GetGameState()
             });
