@@ -131,3 +131,19 @@ canvas{
 .hidden{
     display: none !important;
 }
+
+#winner-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#winner-name{
+    margin: auto;
+    font-size: 3rem;
+}
+
+.button-container > button{
+    margin: 20px 30px;
+}

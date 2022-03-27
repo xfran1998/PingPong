@@ -7,6 +7,7 @@ const canvas = document.querySelector('#game');
 const context = canvas.getContext('2d');
 const settings_container = document.querySelector('.settings-container');
 const finish = document.querySelector('.finish');
+const winner_container = document.querySelector('#winner-container');
 
 let input = {
     type: false,
@@ -24,7 +25,7 @@ Display.SetDisplays({
     1: settings_container,
     2: settings_container,
     3: canvas,
-    4: container,
+    4: winner_container,
 });
 
 
@@ -47,6 +48,7 @@ socket.on('join_room_server', (data) => {
     }
 
     Display.SetTamBoard(data.response.TAM_GAME);
+    Display.SetGameFrec(data.response.game_frec);
 });
 
 
@@ -82,6 +84,26 @@ socket.on('update_score_server', (data) => {
 
 socket.on('change_game_state_server', (data) => {
     Display.ChangeDisplay(data.gameState);
+});
+
+socket.on('win_server', (data) => {
+    console.log('WIN');
+    console.log(data);
+    Display.ShowWinner(data.winner);
+});
+
+socket.on('set_timer_server', (data) => {
+    console.log('set_timer_server');
+    console.log(data);
+
+    Display.SetTimer(data.timer);
+
+    if (data.start_timer == true) {
+        Display.StartTimer();
+    }
+    if (data.start_timer == false) {
+        Display.PauseTimer();
+    }
 });
 
 socket.on('change_player_settings_server', (data) => {

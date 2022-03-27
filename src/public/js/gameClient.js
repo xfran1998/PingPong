@@ -2,9 +2,17 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
 
 class Display{
-    static paddingMiddle = 20;
+    static paddingMiddle = 50;
+    static paddingTop = 20;
+    static lineHeight = 10;
     static font_size = 24;
-    
+    static font_size_score = 16;
+    static timer = null;
+    static time_left = 120;
+    static game_frec = 0;
+    static startLineMid = 40;
+    static paddingTimer = 10;
+
     static canvas_size;
     static context = null;
     static myGameState = null;
@@ -24,9 +32,9 @@ class Display{
         }
 
         Display.DrawMiddleLine();
-        Display.DrawBall();
-        Display.DrawNames();
         Display.DrawScore();
+        Display.DrawTimer();
+        Display.DrawBall();
         // let player = myGame.myGameState.players[0];
         // Display.DrawHealthBar(player, this.context);
 
@@ -43,6 +51,10 @@ class Display{
 
     static SetGameState(myGameState){
         this.myGameState = myGameState;
+    }
+
+    static SetGameFrec(game_frec){
+        this.game_frec = game_frec;
     }
 
     static SetGameMode(GAME_MODE){
@@ -124,12 +136,16 @@ class Display{
     }
 
     static DrawMiddleLine(){
-        this.context.moveTo(this.context.canvas.width/2, 0);
+        this.context.moveTo(this.context.canvas.width/2, this.startLineMid);
         this.context.strokeStyle = '#555';
         this.context.lineWidth=3;
         this.context.setLineDash([15, 10]);
         this.context.lineTo(this.context.canvas.width/2, this.context.canvas.height);
         this.context.stroke();
+    }
+
+    static ShowWinner(winner_name){
+        $('#winner-name').innerHTML = winner_name;
     }
 
     static DrawBall(){
@@ -143,88 +159,41 @@ class Display{
         this.context.closePath();
     }
 
-    static DrawNames(){
-        let count = 0;
-        for(let id in this.myGameState.players){
-        //     let name_player = this.myGameState.players[id].player.name;
-        //     let coords;
-        //     this.context.font = `${this.font_size}px Arial`;
-        //     this.context.fillStyle = '#eee';
-
-        //     if (count == 0) {
-        //         let size_name = this.context.measureText(name_player);
-        //         coords = [this.canvas_size.width/2 - (size_name.width+this.paddingMiddle), this.paddingMiddle+this.font_size/2];
-        //     }
-        //     else{
-        //         coords = [this.canvas_size.width/2 + this.paddingMiddle, this.paddingMiddle+this.font_size/2];
-        //     }
-            
-        //     count++;
-        //     this.context.fillText(name_player, coords[0], coords[1]);
-            this.DrawText(this.myGameState.players[id].player.name, this.font_size,  '#eee', (count == 0));
-            count++;
-        }
-
-    }
-
     static DrawScore(){
         let count = 0;
         for(let id in this.myGameState.players){
-            // let name_player = this.myGameState.players[id].player.name;
-            // let coords;
-            // this.context.font = `${this.font_size/2}px Arial`;
-            // this.context.fillStyle = '#fff';
-            // let size_name = this.context.measureText(name_player);
-
-            // if (count == 0) {
-            //     coords = [this.canvas_size.width/2 - (size_name.width/2+this.paddingMiddle), this.paddingMiddle+this.font_size/2];
-            // }
-            // else{
-            //     coords = [this.canvas_size.width/2 + this.paddingMiddle + size_name.width/2, this.paddingMiddle+this.font_size/2];
-            // }
-            
             // this.context.fillText(name_player, coords[0], coords[1]);
             this.DrawText(this.myGameState.players[id].player.name, this.font_size/2,  '#fff', (count == 0), this.myGameState.players[id].player.score);
             count++;
         }
     }
 
-    static DrawText(name_player, font_size, text_color, is_left, score=null){   
+    static DrawText(name_player, font_size, text_color, is_left, score){   
         let coords;
         this.context.fillStyle = text_color;
-        
-        if (score != null) { // 0 null (score)
-            this.context.font = `${font_size*2}px Arial`;
-        }
-        else{
-            this.context.font = `${font_size}px Arial`;
-        }
-        
+    
+        this.context.font = `${this.font_size}px Arial`;
         let size_name = this.context.measureText(name_player);
-        if (score != null) {
-            this.context.font = `${font_size}px Arial`;
-        }
-
-        if (score == null) // players names
-            if (is_left) {
-                coords = [this.canvas_size.width/2 - (size_name.width+this.paddingMiddle), this.paddingMiddle+this.font_size];
-            }
-            else{
-                coords = [this.canvas_size.width/2 + this.paddingMiddle, this.paddingMiddle+this.font_size];
-            }
-        else
-            if (is_left) {
-                coords = [this.canvas_size.width/2 - (size_name.width/2+this.paddingMiddle), this.paddingMiddle+this.font_size*2];
-            }
-            else{
-                coords = [this.canvas_size.width/2 + this.paddingMiddle + size_name.width/2, this.paddingMiddle+this.font_size*2];
-            }
-
-        if (score != null) {
+        
+        if (is_left) {
+            // Name Player
+            coords = [this.canvas_size.width/2 - (size_name.width+this.paddingMiddle), this.paddingTop+this.font_size];
+            this.context.fillText(name_player, coords[0], coords[1]);
+            
+            // Score points
+            this.context.font = `${this.font_size_score}px Arial`;
+            coords = [this.canvas_size.width/2 - (size_name.width/2+this.paddingMiddle), this.paddingTop+this.font_size+this.font_size_score+this.lineHeight];
             this.context.fillText(score, coords[0], coords[1]);
         }
         else{
+            // Name Player
+            coords = [this.canvas_size.width/2 + this.paddingMiddle, this.paddingTop+this.font_size];
             this.context.fillText(name_player, coords[0], coords[1]);
+            
+            // Score points
+            this.context.font = `${this.font_size_score}px Arial`;
+            coords = [this.canvas_size.width/2 + this.paddingMiddle + size_name.width/2, this.paddingTop+this.font_size+this.font_size_score+this.lineHeight];
+            this.context.fillText(score, coords[0], coords[1]);
         }
     }
 
@@ -241,7 +210,38 @@ class Display{
         let tamHealth = [player.health, 30];
         let stroke = 3;     
     }
+
+    static DrawTimer(){
+        let time_min = ("0" + Math.floor(this.time_left/60)).slice(-2);
+        let time_sec = ("0" + this.time_left%60).slice(-2);
+        let text_time = `${time_min}:${time_sec}`;
+        this.context.font = `${this.font_size_score}px Arial`;
+        this.context.fillStyle = '#fff';
+        let size_time = this.context.measureText(text_time);
+        this.context.fillText(text_time, this.canvas_size.width/2 - size_time.width/2, this.font_size_score+this.paddingTimer);
+    }
+
+    static SetTimer(time_left){
+        this.time_left = time_left;
+        if (this.timer != null) {
+            clearInterval(this.timer);
+        }
+    }
+
+    static StartTimer(){
+        this.timer = setInterval(() => {
+            this.time_left--;
+            if (this.time_left <= 0) {
+                clearInterval(this.timer);
+            }
+        }, 1000);
+    }
+
+    static PauseTimer(){
+        clearInterval(this.timer);
+    }
 }
+
 
 class GameState{
     constructor(){
@@ -324,7 +324,7 @@ class GameState{
 }
 
 class GameMode{
-    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, FINISH_GAME: 3, END: 4};
+    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, FINISH_GAME: 3};
     static GAME_TYPE = {CLASIC: 0, RAMBLE: 1}; // Ramble: habilities or random changes
     static GAME_MODALITY = {SINGLE: 0, MULTI: 1}; // Single: one player (we will need a basic AI), Multi: multiplayer
     

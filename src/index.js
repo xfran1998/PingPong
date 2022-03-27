@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
         rooms[room_name].game.DeletePlayer(socket.id);
         rooms[room_name].game.Stop(
             // check if room exists
-            () => {
+            () => { // restart game callback
                 // check if room room exists
                 console.log('STOP');
                 if (!rooms[room_name]) return
@@ -72,10 +72,20 @@ io.on('connection', (socket) => {
                     return;
                 }
 
+                delete rooms[room_name].game;
+                rooms[room_name].game = new Game(TAM_GAME, 1000/FPS); // restart game
+
                 io.to(room_name).emit('change_game_state_server', {
                     gameState: rooms[room_name].game.GetGameMode().GetGameState()
                 });
-            });
+            },
+            (game) =>  { // pause game callback
+                io.to(room_name).emit('set_timer_server', {
+                    timer: rooms[room_name].game.GetTimer(),
+                    start_timer: false,
+                });
+            }
+            );
     });   
     
     socket.on('join_room_client', (data) => {
@@ -137,7 +147,8 @@ io.on('connection', (socket) => {
         // room: rooms[room_id] to get players and each side players
         let response = {status: 200, response: {
             room_players: rooms[room_id]['players'],
-            TAM_GAME: TAM_GAME
+            TAM_GAME: TAM_GAME,
+            game_frec: 1000/FPS,
         }};
         
         console.log(room_id);
@@ -160,11 +171,29 @@ io.on('connection', (socket) => {
             io.to(room_id).emit('set_ball_server', {
                 ball: myGame.GetBall(),
             });
-            myGame.Run(); //start game
+            
+            myGame.Run(
+                (winner) => { // win callback
+                    console.log('WINNER: ' + winner);
+                    io.to(room_id).emit('win_server', {
+                        winner: winner,
+                    });
+                    io.to(room_id).emit('change_game_state_server', {
+                        gameState: myGame.GetGameMode().GetGameState()
+                    });            
+                }
+            ); //start game
             // io.to(room_id).emit('start_game_server');            
             socket.broadcast.to(room_id).emit('change_game_state_server', {
                 gameState: myGame.GetGameMode().GetGameState()
             });            
+
+            if (myGame.GetGameMode().GetGameState() == GameMode.GAME_STATE.PLAYING){ // restart the game again
+                io.to(room_id).emit('set_timer_server', {
+                    timer: rooms[room_id].game.GetTimer(),
+                    start_timer: true,
+                });
+            }
         }
                     
         // if (rooms[room_id] && rooms[room_id].length == 2){
@@ -194,6 +223,10 @@ io.on('connection', (socket) => {
         // // console.log(myGame.GetPlayersKeys());
         // console.log(myGame.GetPlayersDir());
         // console.log("**********************");
+    });
+
+    socket.on('restart_game_client', () => {
+        
     });
     
     socket.on('set_room_menu_client', (gameSettings) => {
@@ -231,8 +264,14 @@ io.on('connection', (socket) => {
             io.to(room_name).emit('change_player_settings_server', {
                 players: myGame.GetAllPlayers(),
             });
+
             io.to(room_name).emit('change_game_state_server', {
                 gameState: rooms[room_name].game.GetGameMode().GetGameState()
+            });
+
+            io.to(room_name).emit('set_timer_server', {
+                timer: rooms[room_name].game.GetTimer(),
+                start_timer: true,
             });
         }
     });

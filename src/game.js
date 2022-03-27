@@ -228,6 +228,7 @@ class GameState{
         this.isPlayerWaiting = false;
         this.room_id;
         this.hitSide = -1;
+        this.timer = 60 * 0.1; // 2 min
     }
 
     AddPlayer(idPlayer, newPlayer){
@@ -289,6 +290,26 @@ class GameState{
 
     GetScorePlayer(idPlayer){
         return this.players[idPlayer].score;
+    }
+
+    GetTimer(){
+        return this.timer;
+    }
+
+    GetPlayerMostScore(){
+        let maxScore = -1;
+        let playerName = 'Unknown';
+
+        for (let id in this.players){
+            if (this.players[id].score > maxScore){
+                maxScore = this.players[id].score;
+                playerName = this.players[id].name;
+            }
+            else if (this.players[id].score == maxScore){
+                playerName = 'Tie'; // Tie
+            }
+        }
+        return playerName;
     }
 }
 
@@ -395,13 +416,28 @@ class Game{
             this.gameLoop = setInterval(() => {
                 // game loop
                 myBehaviour(this);
+            }, this.gameFrec);
+
+            this.timerLoop = setInterval(() => {
+                this.myGameState.timer--;
+
+                if (this.myGameState.timer <= 0){
+                    console.log('GamePlaying finished');
+                    clearInterval(this.timerLoop);
+                    clearInterval(this.gameLoop);
+                    this.myGameMode.UpdateState(GameMode.GAME_STATE.FINISH_GAME);
+                    resolve({finished: true, winner: this.GetPlayerMostScore()});
+                }
                 
                 if (this.myGameMode.GetGameState() != GameMode.GAME_STATE.PLAYING){
-                    console.log('Acaba la partida crack');
+                    console.log('GamePlaying paused');
+                    clearInterval(this.timerLoop);
                     clearInterval(this.gameLoop);
-                    resolve();
+
+                    resolve({finished: false});
                 }
-            }, this.gameFrec);
+            }, 1000);
+
         });   
     }
     
@@ -417,12 +453,14 @@ class Game{
         });    
     }
     
-    Run(){ /// if this asycn and socket.io is sync ????
+    Run(win_callback){ /// if this asycn and socket.io is sync ????
         // Change the game state untill game is finished
-        this.ChangeState();
+        console.log('Game started');
+        console.log(win_callback);
+        this.ChangeState(win_callback);
     }
 
-    async ChangeState(){
+    async ChangeState(win_callback){
         let state = this.myGameMode.GetGameState();
 
         console.log('ChangeState: ' + state);
@@ -433,19 +471,27 @@ class Game{
             await this.WaitJoin();
         }
         else if (state == GameMode.GAME_STATE.PLAYING){
-            await this.WaitPlaying();
+            let finish = await this.WaitPlaying();
+            console.log(JSON.stringify(finish));
+            if (finish.finished){
+                win_callback(finish.winner);
+            }
         }
         else if (state == GameMode.GAME_STATE.FINISH_GAME){
             await this.WaitFinish();
         }
 
         if (state != GameMode.GAME_STATE.INIT) // if gameLoop is not null then change state when the previous one is finished
-            this.ChangeState();
+            this.ChangeState(win_callback);
     }
 
-    Stop(restart_players){
-        if (this.gameLoop != null) 
-            clearInterval(this.gameLoop);   
+    Stop(restart_players, pause_players){
+        if (this.gameLoop != null){
+            clearInterval(this.gameLoop);
+        }
+        if (this.timerLoop != null){
+            clearInterval(this.timerLoop);
+        }
             
         setTimeout(() => {
             if (this.gameLoop == null) {
@@ -453,6 +499,10 @@ class Game{
                 console.log('Game restarted');
             }
         }, 10000);
+
+        if (pause_players){
+            pause_players(this);
+        }
     }
     
     // Playing behavior callbacks
@@ -661,6 +711,15 @@ class Game{
 
     GetScorePlayer(idPlayer){
         return this.myGameState.GetScorePlayer(idPlayer);
+    }
+
+    GetTimer(){
+        console.log("GetTimer");
+        return this.myGameState.timer;
+    }
+
+    GetPlayerMostScore(){
+        return this.myGameState.GetPlayerMostScore();
     }
 }
 
