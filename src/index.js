@@ -226,7 +226,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('restart_game_client', () => {
-        
+        rooms[players[socket.id].room].game.RestartGame();
     });
     
     socket.on('set_room_menu_client', (gameSettings) => {

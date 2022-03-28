@@ -311,6 +311,26 @@ class GameState{
         }
         return playerName;
     }
+
+    RestartScorePlayers(){
+        for (let id in this.players){
+            this.players[id].score = 0;
+        }
+    }
+
+    RestartBall(tam_canvas){
+        this.ball.SetPos({x: tam_canvas.width/2, y: tam_canvas.height/2});
+        this.ball.direction = {x: side = Math.floor(Math.random()*3 - 1), y: side = Math.floor(Math.random()*3 - 1)}; // Random direction -1,1]
+    }
+
+    RestartGame(tam_canvas){
+        this.RestartScorePlayers();
+        this.RestartBall(tam_canvas);
+        this.isPlayerWaiting = false;
+        this.hitSide = -1;
+        this.timer = 60 * 0.1; // 2 min
+
+    }
 }
 
 class GameMode{
@@ -363,6 +383,10 @@ class GameMode{
 
     IsBeheavurSet(){
         return this.isBeheavurSet;
+    }
+
+    RestartGame(){
+        this.myGameState = GameMode.GAME_STATE.PLAYING;
     }
 }
 
@@ -720,6 +744,16 @@ class Game{
 
     GetPlayerMostScore(){
         return this.myGameState.GetPlayerMostScore();
+    }
+
+    RestartGame(){
+        this.myGameState.RestartGame(this.size_canvas);
+        this.myGameMode.myGameState = GameMode.GAME_STATE.PLAYING;
+    }
+    
+    BackToMenu(){
+        this.myGameState.RestartGame(this.size_canvas);
+        this.myGameMode.myGameState = GameMode.GAME_STATE.MENU;
     }
 }
 
