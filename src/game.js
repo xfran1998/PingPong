@@ -188,7 +188,7 @@ class Ball extends Pawn{
         let hitSide = -1;
 
         if (hit_borders.x_axis){
-            hitSide = (this.direction.x > 0) ? 1 : 0;
+            hitSide = (this.pos.x > canvas_size.width/2) ? 1 : 0;
             this.direction.x *= -1;
         }
         if (hit_borders.y_axis){
@@ -228,7 +228,7 @@ class GameState{
         this.isPlayerWaiting = false;
         this.room_id;
         this.hitSide = -1;
-        this.timer = 60 * 0.1; // 2 min
+        this.timer = 60 * 2; // 2 min
     }
 
     AddPlayer(idPlayer, newPlayer){
@@ -312,24 +312,32 @@ class GameState{
         return playerName;
     }
 
-    RestartScorePlayers(){
+    RestartScorePlayers(tam_canvas){
         for (let id in this.players){
             this.players[id].score = 0;
+            this.players[id].pos.y = tam_canvas.height/2;
         }
     }
 
     RestartBall(tam_canvas){
         this.ball.SetPos({x: tam_canvas.width/2, y: tam_canvas.height/2});
-        this.ball.direction = {x: side = Math.floor(Math.random()*3 - 1), y: side = Math.floor(Math.random()*3 - 1)}; // Random direction -1,1]
+        let randInt = Math.floor(Math.random()*3 - 1);
+        randInt = (randInt == 0) ? 1 : randInt;
+
+        this.ball.direction = {x: randInt, y: 1}; // Random direction -1,1]
+        let original_speed = this.ball.speed;
+        this.ball.speed = 0;
+        setTimeout(() => {
+            this.ball.speed = original_speed;
+        }, 1200);
     }
 
     RestartGame(tam_canvas){
-        this.RestartScorePlayers();
+        this.RestartScorePlayers(tam_canvas);
         this.RestartBall(tam_canvas);
         this.isPlayerWaiting = false;
         this.hitSide = -1;
-        this.timer = 60 * 0.1; // 2 min
-
+        this.timer = 60 * 2; // 2 min
     }
 }
 

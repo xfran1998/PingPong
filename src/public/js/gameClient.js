@@ -223,6 +223,7 @@ class Display{
 
     static SetTimer(time_left){
         this.time_left = time_left;
+        this.time_game = time_left;
         if (this.timer != null) {
             clearInterval(this.timer);
         }
@@ -239,6 +240,14 @@ class Display{
 
     static PauseTimer(){
         clearInterval(this.timer);
+    }
+
+    static RestartGame(){
+        console.log('Restart Game');
+        console.log(this.canvas_size);
+        this.myGameState.RestartGame(this.canvas_size);
+        this.SetTimer(this.time_game);
+        this.StartTimer();
     }
 }
 
@@ -321,10 +330,19 @@ class GameState{
     SetBallSize(size){
         this.ball.size = size;
     }
+
+    RestartGame(tam_canvas){
+        for (let id in this.players){
+            this.players[id].player.score = 0;
+            this.players[id].player.pos.y = tam_canvas.height/2;
+        }
+
+        this.ball.pos = {x: tam_canvas.width/2, y: tam_canvas.height/2};
+    }
 }
 
 class GameMode{
-    static GAME_STATE = {MENU: 0, WAITING_PLAYERS: 1, PLAYING: 2, FINISH_GAME: 3};
+    static GAME_STATE = {INIT: 0, MENU: 1, WAITING_PLAYERS: 2, PLAYING: 3, FINISH_GAME: 4};
     static GAME_TYPE = {CLASIC: 0, RAMBLE: 1}; // Ramble: habilities or random changes
     static GAME_MODALITY = {SINGLE: 0, MULTI: 1}; // Single: one player (we will need a basic AI), Multi: multiplayer
     

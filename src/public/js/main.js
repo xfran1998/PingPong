@@ -110,6 +110,13 @@ socket.on('change_player_settings_server', (data) => {
     Display.myGameState.SetAllPlayers(data.players);
 });
 
+socket.on('restart_game_server', ()=>{
+    console.log('restart_game_server');
+    Display.RestartGame();
+    console.log(GameMode.GAME_STATE.PLAYING);
+    Display.ChangeDisplay(GameMode.GAME_STATE.PLAYING);
+});
+
 function SetCanvas(room_players, TAM_GAME, socked_id, GAME_MODE){
     canvas.width = TAM_GAME.width;
     canvas.height = TAM_GAME.height;
@@ -192,6 +199,11 @@ $('form').addEventListener('submit', (e) => {
     console.log('prevented');
     return false;
 });
+
+$('#restart-game').addEventListener('click', () => {
+    socket.emit('restart_game_client');
+});
+
 
 function searchKeyPress(e) {
     e.preventDefault();

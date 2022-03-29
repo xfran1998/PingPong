@@ -226,7 +226,9 @@ io.on('connection', (socket) => {
     });
 
     socket.on('restart_game_client', () => {
+        if (!players[socket.id]) return;
         rooms[players[socket.id].room].game.RestartGame();
+        io.to(players[socket.id].room).emit('restart_game_server');
     });
     
     socket.on('set_room_menu_client', (gameSettings) => {
