@@ -6,7 +6,8 @@ class Sound {
     constructor(src, options) {
         this.audioCtx = new AudioContext();
         this.audioElement = new Audio(src);
-        this.gainNode = this.audioCtx.createGain();
+        //this.gainNode = this.audioCtx.createGain();
+        this.gainNode = new GainNode(this.audioCtx);
         this.pannerOptions = { pan: 0 };
         this.panner = new StereoPannerNode(this.audioCtx, this.pannerOptions);
         this.track = this.audioCtx.createMediaElementSource(this.audioElement);
@@ -14,13 +15,20 @@ class Sound {
     }
 
     Play() {
+        // check if context is in suspended state
+        if(this.audioCtx.state === 'suspended'){
+            this.audioCtx.resume();
+        }
+
         this.audioElement.currentTime = 0;
-        console.log(this.audioElement);
+        console.log('this.gainNode.gain.value');
+        console.log(this.gainNode.gain.value);
         this.audioElement.play();
     }
 
     ChangeGain(GainValue) {
         this.gainNode.gain.value = GainValue;
+        console.log(this.gainNode.gain.value);
     }
 
     ChangePanner(side) {
@@ -244,15 +252,21 @@ class Display{
     static ShowWinner(winner_name){
         $('#winner-name').innerHTML = winner_name;
     }
-
+    color_ball
     static DrawBall(){
         let ball = this.myGameState.GetBall();
         if (!ball) return;
 
+        // color_ball== {color1:x, color2:y}
+
         this.context.beginPath();
         this.context.arc(ball.pos.x, ball.pos.y, ball.size.width/2, 0, 2 * Math.PI);
-        this.context.fillStyle = ball.color;
+        let gr = this.context.createRadialGradient(ball.pos.x, ball.pos.y, ball.size.width/2, ball.pos.x, ball.pos.y, ball.size.width/4);
+        gr.addColorStop(0, ball.color.color1);
+        gr.addColorStop(1, ball.color.color2);
+        this.context.fillStyle = gr;
         this.context.fill();
+        
         this.context.closePath();
     }
 

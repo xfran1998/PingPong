@@ -79,9 +79,13 @@ socket.on('update_ball_size_server', (data) => {
     Display.myGameState.SetBallSize(data.ballSize);
 });
 
+socket.on('setting_update_server', (data) => {
+    UpdateFormValues('recieve', data.id, data.value);
+});
+
 socket.on('update_score_server', (data) => {
     Display.myGameState.SetPlayerScore(data.player_id, data.score);
-    console.log('SCORE:' + data.player_id + ' - ' + data.score);
+    // console.log('SCORE:' + data.player_id + ' - ' + data.score);
 
     // SOUND
     //sound ball score
@@ -181,8 +185,35 @@ document.addEventListener('keyup', (e) => {
 });
 
 $('#sound').addEventListener('input', (e) => {
-    var value = e.value;
-    soundTrack.changeGain(value);
+    soundTrack.ChangeGain(e.currentTarget.value);
+    UpdateFormValues('send', 'sound', e.currentTarget.value);
+});
+
+// cambio de valor en tiempo real
+$('#name-player1').addEventListener('input', (e) => {
+    UpdateFormValues('send', 'name-player1', e.currentTarget.value);
+});
+
+$('#name-player2').addEventListener('input', (e) => {
+    UpdateFormValues('send', 'name-player2', e.currentTarget.value);
+});
+
+$('#player-size').addEventListener('input', (e) => {
+    UpdateFormValues('send', 'player-size', e.currentTarget.value);
+    document.getElementById("text-player-size").value = e.currentTarget.value;
+    UpdateFormValues('send', 'text-player-size', e.currentTarget.value);
+});
+
+$('#player-speed').addEventListener('input', (e) => {
+    UpdateFormValues('send', 'player-speed', e.currentTarget.value);
+    document.getElementById("text-player-speed").value = e.currentTarget.value;
+    UpdateFormValues('send', 'text-player-speed', e.currentTarget.value);
+});
+
+$('#ball-speed').addEventListener('input', (e) => {
+    UpdateFormValues('send', 'ball-speed', e.currentTarget.value);
+    document.getElementById("text-ball-speed").value = e.currentTarget.value;
+    UpdateFormValues('send', 'text-ball-speed', e.currentTarget.value);
 });
 
 $('#join-room').addEventListener('click', () => {
@@ -191,7 +222,7 @@ $('#join-room').addEventListener('click', () => {
     room = room.replace(' ', '_');
 
     // check if room only contain [A-Z], [0-9], [a-z], [_], [.] and [ ]
-    var regex = /^[A-Za-z0-9_.]+$/;
+    let regex = /^[A-Za-z0-9_.]+$/;
 
     if (!regex.test(room)) {
       alert('Room name must only contain [A-Z, a-z, 0-9, _, ., SPACE]');
@@ -204,6 +235,7 @@ $('#join-room').addEventListener('click', () => {
     }
     
     soundTrack = new SoundTrack();
+
     socket.emit('join_room_client', {
         room_id: room,
     });
@@ -284,4 +316,33 @@ function HitBall(hit_node){
 function BallGrowingSound(){
     // play sound ball growing
     setTimeout(() => soundTrack.PlayBallAppear(), 500);
+}
+
+function UpdateFormValues(flag, id, value){
+    // llamar desdee el event listener
+    console.log('update form values');
+    console.log(flag);
+    console.log(id);
+    console.log(value);
+
+    // envia la info al server
+    if (flag == 'send'){
+        socket.emit('setting_update_client', {
+            id: id,
+            value: value
+        });
+    }
+    
+    if (flag == 'recieve'){
+        ChangeInputValue(id, value);
+
+        if (id == 'sound'){
+            soundTrack.ChangeGain(value);
+        }
+    }
+}
+
+function ChangeInputValue(id, value){
+    let input = document.getElementById(id);
+    input.value = value;
 }

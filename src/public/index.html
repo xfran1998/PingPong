@@ -71,23 +71,23 @@
             <legend>Dificultad</legend>
             <div class="form-container">
                 <label for="player-size">Players Size</label> <!-- Tam Y player -->
-                <input type="range" min="30" max="100" value="65" step="5" onchange="this.parentNode.children[2].value = this.value" name="player-size" id="player-size">
-                <input type="text" value="65" readonly>
+                <input type="range" min="30" max="100" value="65" step="5" name="player-size" id="player-size">
+                <input id="text-player-size" type="text" value="65" readonly>
             </div>
             <div class="form-container">
                 <label for="player-speed">Players Speed</label>
-                <input type="range" min="1" max="15" step="1" value="8" onchange="this.parentNode.children[2].value = this.value" name="player-speed" id="player-speed">
-                <input type="text" value="8" readonly>
+                <input type="range" min="1" max="15" step="1" value="8" oninpu="this.parentNode.children[2].value = this.value" name="player-speed" id="player-speed">
+                <input id="text-player-speed" type="text" value="8" readonly>
             </div> 
             <div class="form-container">
                 <label for="ball-speed">Ball Speed</label>
                 <input type="range" min="1" max="15" step="1" value="8" onchange="this.parentNode.children[2].value = this.value" name="ball-speed" id="ball-speed">
-                <input type="text" value="8" readonly>
+                <input id="text-ball-speed" type="text" value="8" readonly>
             </div> 
         </fieldset>
         <fieldset>
             <legend>Sonido</legend>
-            <input type="range" name="sound" id="sound">
+            <input type="range" min="0" max="2" step="0.1" name="sound" id="sound">
         </fieldset>
         <div class="form-container">
             <div class="boton-guay boton-div">

@@ -26,13 +26,17 @@ const TAM_GAME = {width: 600, height: 350};
 const FPS = 60;
 const padding = 20;
 const TAM_PLAYER = {width: 10, height: 50};
+const TAM_BALL = { width: 24, height: 24};
 const PLAYER_SPEED = 10;
 
 // Seteando carpeta estatica, carpeta donde contiene todos los datos que requiere el usuario cuando hace la peticion
 // a la web buscando recursos.
 app.use(express.static(path.join(__dirname, 'public')))
 
+// colores de las palas
 const colors = ['blue','red'];
+const color_ball = { color1: 'white', color2: 'gray' };
+
 
 console.log("Empezando!!");
 // Funcion que se ejecuta cuando un usuario se conecta al websocket
@@ -110,7 +114,7 @@ io.on('connection', (socket) => {
         if (rooms[room_id]['players'].length == 0){ // first player, new room
             side = Math.floor(Math.random() * 2); // choose a side randomly between 0 and 1 (left or right)
             myGame = new Game(TAM_GAME, FPS);
-            myGame.SpawnBall({width:24, height:24}, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, 'black', 10);
+            myGame.SpawnBall(TAM_BALL, {x: TAM_GAME.width/2, y: TAM_GAME.height/2}, color_ball, 10);
             myGame.SetRoomId(room_id);
             StartRoom(myGame); // starts gameLoop
             rooms[room_id]['game'] = myGame;
@@ -224,6 +228,10 @@ io.on('connection', (socket) => {
         // // console.log(myGame.GetPlayersKeys());
         // console.log(myGame.GetPlayersDir());
         // console.log("**********************");
+    });
+
+    socket.on('setting_update_client', (data) => {
+        socket.broadcast.to(players[socket.id].room).emit('setting_update_server', data);
     });
 
     socket.on('restart_game_client', () => {
@@ -359,6 +367,7 @@ async function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, 
                         ball = myGame.GetBall();
                         original_size = ball.size.width;
                         original_speed = ball.speed;
+                        console.log('Ball size: ', ball.size);
 
                         let size_canvas = myGame.GetCanvasSize();
                         
@@ -399,6 +408,10 @@ async function WaitGrowing(myGame, ball, original_size){
         setTimeout(() => {
             clearInterval(growInterval);
             ball.size.width = original_size;
+            console.log('Ball size: ', ball.size);
+            io.to(myGame.GetRoomId()).emit('update_ball_size_server', {
+                ballSize: ball.size
+            });
             resolve();
         }, size_time_interval);
     });

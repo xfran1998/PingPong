@@ -36,8 +36,7 @@ class Pawn{
     constructor(size, pos, color, speed){
         this.size = size;
         this.pos = pos;
-        this.color = color;
-        this.speed = speed;
+        this.color = color; // rgb [1,1,1] {img_path: }        this.speed = speed;
     }
 
     Update(vel_dir){
