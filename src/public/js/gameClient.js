@@ -1,6 +1,102 @@
 const $ = selector => document.querySelector(selector);
 const $$ = selector => document.querySelectorAll(selector);
 
+
+class Sound {
+    constructor(src, options) {
+        this.audioCtx = new AudioContext();
+        this.audioElement = new Audio(src);
+        this.gainNode = this.audioCtx.createGain();
+        this.pannerOptions = { pan: 0 };
+        this.panner = new StereoPannerNode(this.audioCtx, this.pannerOptions);
+        this.track = this.audioCtx.createMediaElementSource(this.audioElement);
+        this.track.connect(this.gainNode).connect(this.panner).connect(this.audioCtx.destination);
+    }
+
+    Play() {
+        this.audioElement.currentTime = 0;
+        console.log(this.audioElement);
+        this.audioElement.play();
+    }
+
+    ChangeGain(GainValue) {
+        this.gainNode.gain.value = GainValue;
+    }
+
+    ChangePanner(side) {
+        if (side)
+            this.panner.pan.value = 1;
+        else
+            this.panner.pan.value = -1;
+    }
+}
+
+class SoundTrack {
+    constructor() {
+        this.player_hit = new Sound("./music/hitplayer.wav");
+        this.wall_hit =  new Sound("./music/rebote1.wav");
+        this.goal1 =  new Sound("./music/punto.wav");
+        this.goal2 =  new Sound("./music/puntoContra.wav");
+        this.ballAppear =  new Sound("./music/salebola.wav");
+        this.gameover =  new Sound("./music/gameover.wav");
+        this.victory =  new Sound("./music/win.wav");
+        this.pause =  new Sound("./music/pause.wav");
+    }
+
+    PlayWallHit(){
+        this.wall_hit.Play();
+    }
+
+    PlayPlayerHit(){
+        this.player_hit.Play();
+    }
+
+    PlayGoal(side){
+        console.log('side: ' + side);
+        console.log('myside: ' + Display.mySide);
+        if (Display.IsMe(side)){
+            this.goal2.Play();
+        }
+        else{
+            this.goal1.Play();
+        }
+    }
+
+    PlayBallAppear(){
+        this.ballAppear.Play();
+    }
+
+    PlayGameOver(){
+        this.gameover.Play();
+    }
+
+    PlayVictory(){
+        this.victory.Play();
+    }
+
+    PlayPause(){
+        this.pause.Play();
+    }
+
+    ChangeGain(value){
+        this.pause.ChangeGain(value);
+        this.victory.ChangeGain(value);
+        this.gameover.ChangeGain(value);
+        this.ballAppear.ChangeGain(value);
+        this.goal2.ChangeGain(value);
+        this.goal1.ChangeGain(value);
+        this.wall_hit.ChangeGain(value);
+        this.player_hit.ChangeGain(value);
+    }
+
+    ChangePanner(side){
+        this.goal1.ChangePanner(side);
+        this.goal2.ChangePanner(!side);
+        this.player_hit.ChangePanner(side);
+    }
+}
+
+
 class Display{
     static paddingMiddle = 50;
     static paddingTop = 20;
@@ -12,7 +108,8 @@ class Display{
     static game_frec = 0;
     static startLineMid = 40;
     static paddingTimer = 10;
-
+    
+    static mySide = -1;;
     static canvas_size;
     static context = null;
     static myGameState = null;
@@ -249,13 +346,21 @@ class Display{
         this.SetTimer(this.time_game);
         this.StartTimer();
     }
+
+    static SetMySide(side){
+        this.mySide = side;
+    }
+
+    static IsMe(side){
+        return side == this.mySide;
+    }
 }
 
 
 class GameState{
     constructor(){
         this.players = {};
-        this.ball = null;
+        this.ball;
     }
     
     SetPlayers(roomPlayers, socked_id){
@@ -394,4 +499,4 @@ class GameMode{
     }
 }
 
-export { GameState, Display, GameMode };
+export { GameState, Display, GameMode, SoundTrack };

@@ -146,10 +146,11 @@ io.on('connection', (socket) => {
         
         // room: rooms[room_id] to get players and each side players
         let response = {status: 200, response: {
-            room_players: rooms[room_id]['players'],
+            room_players: rooms[room_id]['players'], //  side, player
             TAM_GAME: TAM_GAME,
             game_frec: 1000/FPS,
         }};
+        socket.emit('player_side_server', {side: side});
         
         console.log(room_id);
         io.to(room_id).emit('join_room_server', response);
@@ -322,19 +323,34 @@ async function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, 
                     io.to(myGame.GetRoomId()).emit('update_ball_pos_server', {
                         ballPos: ballPos
                     });
-
                 }) // Move the ball
             game.CheckCollision( 
-                async (hitSide) => {
+                async (hitSide, hitWall, hitPlayer) => {
                     let waitBallGrowing = false;
                     let ball;
                     let original_size;
                     let original_speed;
 
+                    if (hitWall){
+                        console.log(`Hit Wall`);
+
+                        io.to(myGame.GetRoomId()).emit('ball_hit_server', {
+                            type: 'wall',
+                        });
+                    }
+
+                    if (hitPlayer.hit){
+                        console.log(`Hit Player`);
+
+                        io.to(myGame.GetRoomId()).emit('ball_hit_server', {
+                            type: 'player',
+                            side: hitPlayer.side,
+                        });
+                    
+                    }
 
                     if (hitSide != -1){ // Ball hits the left/right borders of the field, so one player scores
                         // console.log('Ball hit: ', hitSide);
-                        waitBallGrowing = true;
                         let player_id = myGame.GetPlayerId({side: 1-hitSide}); // Get the player id of the player that hit the ball
                         
                         myGame.AddScorePlayer(player_id);
@@ -351,20 +367,18 @@ async function SetGameBeheavur(myGame){ // TODO: WHEN A PLAYER LEAVES THE ROOM, 
                         
                         ball.pos.x = size_canvas.width/2;
                         ball.pos.y = size_canvas.height/2;
-                        
+
                         io.to(myGame.GetRoomId()).emit('update_score_server', {
                             player_id: player_id,
+                            side: hitSide,
                             score: myGame.GetScorePlayer(player_id)
                         });
-                    }     
-                    if (waitBallGrowing){
+
                         // TODO: Change gradually the size of the ball from 0 to his original size in a certain time
                         await WaitGrowing(myGame, ball, original_size);
                         // TODO: When that certain time is over, change velocity to aim the field player who scored (1-hitSide)
                         ball.speed = original_speed;
-                    }
-                        
-                    
+                    }     
                 });
             });
         }

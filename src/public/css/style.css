@@ -82,6 +82,10 @@ input[type=range]::-webkit-slider-thumb {
     font-weight: 800;
 }
 
+#winner-container > h1, #winner-container > div > h2 {
+    color: white;
+}
+
 .waveTop{
     background-image: url("https://cdn.discordapp.com/attachments/651843244761808906/956489651659624458/wave-bot.png");
 }

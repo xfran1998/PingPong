@@ -1,4 +1,4 @@
-import {GameState, Display, GameMode} from './gameClient.js';
+import {GameState, Display, GameMode, SoundTrack} from './gameClient.js';
 
 const socket = io();
 const container = document.querySelector('.container');
@@ -15,6 +15,8 @@ let input = {
 };
 
 let inside_game = false;
+let soundTrack;
+
 
 
 const $ = selector => document.querySelector(selector);
@@ -80,6 +82,13 @@ socket.on('update_ball_size_server', (data) => {
 socket.on('update_score_server', (data) => {
     Display.myGameState.SetPlayerScore(data.player_id, data.score);
     console.log('SCORE:' + data.player_id + ' - ' + data.score);
+
+    // SOUND
+    //sound ball score
+    HitBall({type: 'goal', side: data.side});
+
+    // sound ball growing
+    BallGrowingSound();
 });
 
 socket.on('change_game_state_server', (data) => {
@@ -115,6 +124,12 @@ socket.on('restart_game_server', ()=>{
     Display.RestartGame();
     console.log(GameMode.GAME_STATE.PLAYING);
     Display.ChangeDisplay(GameMode.GAME_STATE.PLAYING);
+});
+
+socket.on('player_side_server', (data) => {
+    console.log('side: ' + data.side);
+    Display.SetMySide(data.side);
+    console.log(Display.mySide);
 });
 
 function SetCanvas(room_players, TAM_GAME, socked_id, GAME_MODE){
@@ -165,6 +180,10 @@ document.addEventListener('keyup', (e) => {
         UpdateKey(false, e.key);
 });
 
+$('#sound').addEventListener('input', (e) => {
+    var value = e.value;
+    soundTrack.changeGain(value);
+});
 
 $('#join-room').addEventListener('click', () => {
     let room = $('#room-name').value;
@@ -184,6 +203,7 @@ $('#join-room').addEventListener('click', () => {
         return;
     }
     
+    soundTrack = new SoundTrack();
     socket.emit('join_room_client', {
         room_id: room,
     });
@@ -226,16 +246,42 @@ function getDataForm(){
     SetRoomMenu(data);
 }
 
-// function DisableAllInputs(disable, submit_text){
-//     $$('input').forEach(input => {
-//         if(disable)
-//             input.classList.add('input-disabled');
-//         else
-//             input.classList.remove('input-disabled');
-//     });
 
-//     if (submit_text == 'Ready') // Only enable for player who is not ready
-//         $('#start-game').classList.remove('input-disabled');
 
-//     $('#start-game').value = submit_text;
-// }
+// SOUND
+socket.on('ball_hit_server', (hit_node) => {
+    HitBall(hit_node);
+});
+
+function HitBall(hit_node){
+    // { hit_type: < player, wall > }
+    // 
+    if (hit_node.type == 'player'){
+        // play sound hit player
+        // hit_node.side: Side of player hit, < 0, 1 >
+        soundTrack.PlayPlayerHit();
+        // modificar de donde se escucha
+        soundTrack.ChangePanner(hit_node.side);
+        return;
+    }
+
+    if (hit_node.type == 'wall'){
+        // play sound hit wall
+        soundTrack.PlayWallHit();
+        return;
+    }
+
+    if (hit_node.type == 'goal'){
+        // play sound hit goal
+        soundTrack.PlayGoal(hit_node.side);
+        // modificar de donde se escucha
+        soundTrack.ChangePanner(hit_node.side);
+
+        return;
+    }
+}
+
+function BallGrowingSound(){
+    // play sound ball growing
+    setTimeout(() => soundTrack.PlayBallAppear(), 500);
+}

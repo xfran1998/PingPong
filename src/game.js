@@ -185,13 +185,17 @@ class Ball extends Pawn{
     Move(canvas_size){
         let vel_dir = GMath.NormalizeVector([this.direction.x, this.direction.y]);
         let hit_borders = super.UpdateValid(vel_dir, canvas_size);
-        let hitSide = -1;
+
+        let hitSide = {};
+        hitSide.x_axis = -1;
+        hitSide.y_axis = false;
 
         if (hit_borders.x_axis){
-            hitSide = (this.pos.x > canvas_size.width/2) ? 1 : 0;
+            hitSide.x_axis = (this.pos.x > canvas_size.width/2) ? 1 : 0;
             this.direction.x *= -1;
         }
         if (hit_borders.y_axis){
+            hitSide.y_axis = true;
             this.direction.y *= -1; // GG
         }
 
@@ -548,9 +552,10 @@ class Game{
     
     BallMove(replicated){
         let ball = this.myGameState.GetBall();    
-
+        this.myGameState.hitPlayer = { hit: false, side: -1};
+        
         if (ball == null) return;
-
+        
         this.myGameState.hitSide = ball.Move(this.size_canvas);
 
         const players = this.myGameState.GetAllPlayers();
@@ -559,6 +564,8 @@ class Game{
             let collisions = ball.CheckCollisionPlayer(player);
 
             if (collisions.x && collisions.y) {
+                this.myGameState.hitPlayer.hit = true;
+                this.myGameState.hitPlayer.side = (ball.GetPos().x > this.size_canvas.width/2) ? 1 : 0;
                 // get the vector Player------>Ball
                 let col_dir = GMath.GetVector(player.pos, ball.pos);
                 ball.direction = GMath.NormalizeVector(col_dir, false);
@@ -569,7 +576,7 @@ class Game{
     }
 
     async CheckCollision(replicated){
-        replicated(this.myGameState.hitSide);
+        replicated(this.myGameState.hitSide.x_axis, this.myGameState.hitSide.y_axis, this.myGameState.hitPlayer);
     }
 
     GetAllPlayers(){
